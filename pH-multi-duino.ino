@@ -5,7 +5,7 @@
 #include <Ethernet.h>
 #include <BlynkSimpleEthernet.h>
 
-char auth[] = "x"; //Insert auth token between the " "
+char auth[] = "427329468d844399b8631b11f4af91bd"; //Insert auth token between the " "
 
 #include <SimpleTimer.h> //here is the SimpleTimer library
 SimpleTimer timer; // Create a Timer object called "timer"!
@@ -14,10 +14,10 @@ SimpleTimer timer; // Create a Timer object called "timer"!
 // initialize the library with the numbers of the interface pins
 //LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
-const int trigPin = 12;
-const int echoPin = 13;
+const int trigPin = 12; 
+const int echoPin = 13; //distance measurer
 
-const byte switchPin = 2;
+const byte switchPin = 2; //float switch
 
 long duration;
 int distanceCm, volume;
@@ -89,7 +89,7 @@ void measure() { //must recode for flow logic
     // Serial.println ("Switch OPEN.");
      //delay (1000); 
      } // end if 
-digitalWrite(trigPin, LOW);
+digitalWrite(trigPin, LOW); //make own timer for this?
 //delayMicroseconds(2);
 digitalWrite(trigPin, HIGH);
 //delayMicroseconds(10);
