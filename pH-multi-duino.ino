@@ -5,7 +5,7 @@
 #include <Ethernet.h>
 #include <BlynkSimpleEthernet.h>
 
-char auth[] = "427329468d844399b8631b11f4af91bd"; //Insert auth token between the " "
+char auth[] = "x"; //Insert auth token between the " "
 
 #include <SimpleTimer.h> //here is the SimpleTimer library
 SimpleTimer timer; // Create a Timer object called "timer"!
