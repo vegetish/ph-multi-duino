@@ -14,6 +14,15 @@ SimpleTimer timer; // Create a Timer object called "timer"!
 // initialize the library with the numbers of the interface pins
 //LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
+const int trigPin = 12;
+const int echoPin = 13;
+
+const byte switchPin = 2;
+
+long duration;
+int distanceCm, volume;
+
+
 const byte pHpin1 = A8;
 const byte pHpin2 = A9;
 const byte pHpin3 = A10;
@@ -67,6 +76,38 @@ BLYNK_WRITE(14){
 }
 BLYNK_WRITE(15){
   encoderPosCount4 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
+}
+
+void measure() { //must recode for flow logic
+    //if (digitalRead (switchPin) == LOW)
+     //{
+     //Serial.println ("Switch closed.");
+     //delay (1000); 
+     //} // end if switchState is LOW
+     //if (digitalRead (switchPin) == HIGH)
+    // {
+    // Serial.println ("Switch OPEN.");
+     //delay (1000); 
+     } // end if 
+digitalWrite(trigPin, LOW);
+//delayMicroseconds(2);
+digitalWrite(trigPin, HIGH);
+//delayMicroseconds(10);
+digitalWrite(trigPin, LOW);
+duration = pulseIn(echoPin, HIGH); //pulse from ultrasonic distance detector
+distanceCm= duration*0.034/2; //convert to centimeters
+volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
+
+//lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
+//lcd.print("Bopper: "); // Prints string "Distance" on the LCD
+//lcd.print(switchPin); // Prints the distance value from the sensor
+//lcd.print(" cm");
+//lcd.setCursor(0,1);
+//lcd.print("Volume");
+//lcd.print(volume);
+//lcd.print("L");
+//Serial.println(duration);
+
 }
 
 void ph(){
@@ -188,6 +229,11 @@ void blynker4() { //Writes the setpoint value to a gague widget.Connect the gagu
 
 void setup(){
   Serial.begin(9600); // initialize serial communications at 9600 bps
+  
+  pinMode (switchPin, INPUT_PULLUP); //Float switch pins
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
   //lcd.begin(16, 2); // set up the LCD's number of columns and rows: 
   pinMode(relayPin1, OUTPUT);
   pinMode(relayPin2, OUTPUT);
@@ -203,6 +249,8 @@ void setup(){
   timer.setInterval(2300, blynker3);
   timer.setInterval(2300, blynker4);//the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
   timer.setInterval(24000, ph);
+  timer.setInterval(25000, measure);
+  
   //timer.setInterval(2000, setpointwriter);
 }
 
@@ -212,4 +260,3 @@ void loop(){
   timer.run();
   //encoder();
 }
-
