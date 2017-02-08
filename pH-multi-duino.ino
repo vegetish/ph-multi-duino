@@ -5,7 +5,7 @@
 #include <Ethernet.h>
 #include <BlynkSimpleEthernet.h>
 
-char auth[] = "x"; //Insert auth token between the " "
+char auth[] = "427329468d844399b8631b11f4af91bd"; //Insert auth token between the " "
 
 #include <SimpleTimer.h> //here is the SimpleTimer library
 SimpleTimer timer; // Create a Timer object called "timer"!
@@ -21,6 +21,11 @@ const byte switchPin = 2; //float switch
 
 long duration;
 int distanceCm, volume;
+
+int algaecase; //variable used for determining which pair of algae tanks are being used (1+2 or 3+4)
+int valveoutput;
+int turbidity;
+int turbsetpoint;
 
 
 const byte pHpin1 = A8;
@@ -65,6 +70,10 @@ float pH3 = 10;
 float Po4;
 float pH4 = 10;
 
+BLYNK_WRITE(0){
+  algaecase = param.asInt(); 
+}
+
 BLYNK_WRITE(12){
   encoderPosCount1 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
 }
@@ -78,6 +87,7 @@ BLYNK_WRITE(15){
   encoderPosCount4 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
 }
 
+
 void measure() { //must recode for flow logic
     //if (digitalRead (switchPin) == LOW)
      //{
@@ -88,7 +98,7 @@ void measure() { //must recode for flow logic
     // {
     // Serial.println ("Switch OPEN.");
      //delay (1000); 
-     } // end if 
+     // end if 
 digitalWrite(trigPin, LOW); //make own timer for this?
 //delayMicroseconds(2);
 digitalWrite(trigPin, HIGH);
@@ -109,6 +119,7 @@ volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
 //Serial.println(duration);
 
 }
+
 
 void ph(){
   Po1 = (1023 - analogRead(pHpin1));
@@ -213,19 +224,37 @@ else
 
 
 
-void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1
-    Blynk.virtualWrite(V21, (encoderPosCount1/10));   
-}
-void blynker2() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1
+void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: for å vise på skjermen hva setpoint er
+    Blynk.virtualWrite(V21, (encoderPosCount1/10));  
     Blynk.virtualWrite(V22, (encoderPosCount2/10));
-}
-void blynker3() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1
     Blynk.virtualWrite(V23, (encoderPosCount3/10));
-}
-void blynker4() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1
     Blynk.virtualWrite(V24, (encoderPosCount4/10));   
 }
 
+
+void algaetank(){
+  
+  switch (algaecase) {
+    case 1:
+     if (turbidity < turbsetpoint);
+{
+  digitalWrite(relayPin5, HIGH); 
+  //finn kode for riktig "delay" ikke delay(): teller mens det går (teller millis)
+  ++valveoutput; //må kode for riktig pin relaypin skal være valveoutput
+  //led3.on();
+}
+
+
+      break;
+    case 2:
+      //do something when var equals 2
+      break;
+    default: 
+      // if nothing else matches, do the default
+      // default is optional
+    break;
+  }
+}
 
 void setup(){
   Serial.begin(9600); // initialize serial communications at 9600 bps
@@ -244,12 +273,10 @@ void setup(){
   //pinMode(13, OUTPUT);
   //if (ethbutton == LOW) {
   Blynk.begin(auth, "blynk-cloud.com");
-  timer.setInterval(2100, blynker1);
-  timer.setInterval(2200, blynker2);
-  timer.setInterval(2300, blynker3);
-  timer.setInterval(2300, blynker4);//the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
+  timer.setInterval(2100, blynker1); //the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
   timer.setInterval(24000, ph);
   timer.setInterval(25000, measure);
+  timer.setInterval(120000, algaetank);
   
   //timer.setInterval(2000, setpointwriter);
 }
