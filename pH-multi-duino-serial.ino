@@ -61,7 +61,7 @@ float encoderPosCount4 = 78; //default setpoint at startup set to 8.0
 //int aVal;
 //boolean bCW;
 
-// Variables:-
+// Variables: pH set to 10 by default to avoid CO2 valves activting on arduino boot
 float Po1;
 float pH1 = 10;
 float Po2;
