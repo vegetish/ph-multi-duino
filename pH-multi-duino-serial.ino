@@ -89,7 +89,7 @@ BLYNK_WRITE(15){
 }
 
 
-void measure() { //must recode for flow logic
+void measure() { //must recode for flow logic // This function is reading data from the floatswitch and (later in the code) from distance sensor
     //if (digitalRead (switchPin) == LOW)
      //{
      //Serial.println ("Switch closed.");
