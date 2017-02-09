@@ -100,7 +100,7 @@ void measure() { //must recode for flow logic
     // Serial.println ("Switch OPEN.");
      //delay (1000); 
      // end if 
-digitalWrite(trigPin, LOW); //make own timer for this?
+digitalWrite(trigPin, LOW); //make own timer for this? // Both TrigPin and EchoPin functions are related to ultrasonic distance sensor.
 //delayMicroseconds(2);
 digitalWrite(trigPin, HIGH);
 //delayMicroseconds(10);
