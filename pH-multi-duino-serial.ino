@@ -118,7 +118,7 @@ distanceCm= duration*0.034/2; //convert to centimeters
 volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
 
 //lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
-//lcd.print("Bopper: "); // Prints string "Distance" on the LCD
+//lcd.print("Bopper: "); // Prints string "Distance" on the LCD // Bopper mean "floatswitch"
 //lcd.print(switchPin); // Prints the distance value from the sensor
 //lcd.print(" cm");
 //lcd.setCursor(0,1);
@@ -131,7 +131,7 @@ volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
 
 
 void ph(){
-  Po1 = (1023 - analogRead(pHpin1));
+  Po1 = (1023 - analogRead(pHpin1)); // it is done convert value from analogue sensor to 
   Po2 = (1023 - analogRead(pHpin2));
   Po3 = (1023 - analogRead(pHpin3));
   Po4 = (1023 - analogRead(pHpin4));
@@ -140,7 +140,7 @@ void ph(){
   //Serial.print(Po3); //This is the raw voltage value for the pH module
   //Serial.print(Po4); //This is the raw voltage value for the pH module
    //Calibration values:
-   //405@pH7
+   //405@pH7 // These values were checked/calibrated manually (we need to do it to read values from analogue sensors correctly 
    //290@ph4
 
   //Serial.print(", ph =");
