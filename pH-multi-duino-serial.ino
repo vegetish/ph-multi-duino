@@ -100,12 +100,20 @@ void measure() { //must recode for flow logic
     // Serial.println ("Switch OPEN.");
      //delay (1000); 
      // end if 
+   /* The following trigPin/echoPin cycle is used to determine the distance of the nearest
+ object by bouncing soundwaves off it */
+ 
+ //Trigger a HIGH pulse for 2 or more microseconds
+ //Give a short LOW pulse before sending a HIGH one
+  
 digitalWrite(trigPin, LOW); //make own timer for this? // Both TrigPin and EchoPin functions are related to ultrasonic distance sensor.
 //delayMicroseconds(2);
 digitalWrite(trigPin, HIGH);
 //delayMicroseconds(10);
 digitalWrite(trigPin, LOW);
+  //Now, lets read the read the bounced wave
 duration = pulseIn(echoPin, HIGH); //pulse from ultrasonic distance detector
+  //calculate the distance
 distanceCm= duration*0.034/2; //convert to centimeters
 volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
 
