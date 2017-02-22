@@ -128,7 +128,14 @@ volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
 //Serial.println(duration);
 
 }
-
+// modified map function for float values. Now we don't need an additional variables (pHm1,pHm2,pHm3,pHm4)
+float map_float(float value,float fromLow, float fromHigh, float toLow, float toHigh){
+	return (toLow + (value - fromLow) * ((toHigh - toLow) / (fromHigh - fromLow)));	
+	//float k = (toHigh - toLow) / (fromHigh - fromLow);
+	//float len_v = value - fromLow;
+	//float new_len = len_v * k;
+	//return (toLow + new_len);	
+}  
 
 void ph(){
   Po1 = (1023 - analogRead(pHpin1));
@@ -144,14 +151,18 @@ void ph(){
    //290@ph4
 
   //Serial.print(", ph =");
-  float pHm1 = map(Po1, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
-  float pH1 = (pHm1/100);
-  float pHm2 = map(Po2, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
-  float pH2 = (pHm2/100);
-  float pHm3 = map(Po3, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
-  float pH3 = (pHm3/100);
-  float pHm4 = map(Po4, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
-  float pH4 = (pHm4/100);
+  float pH1 = map_float(Po1, 290, 406, 4, 7);
+  float pH2 = map_float(Po2, 290, 406, 4, 7);
+  float pH3 = map_float(Po3, 290, 406, 4, 7);
+  float pH4 = map_float(Po4, 290, 406, 4, 7);
+  //float pHm1 = map(Po1, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
+  //float pH1 = (pHm1/100);
+  //float pHm2 = map(Po2, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
+  //float pH2 = (pHm2/100);
+  //float pHm3 = map(Po3, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
+  //float pH3 = (pHm3/100);
+  //float pHm4 = map(Po4, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
+  //float pH4 = (pHm4/100);
   //Serial.println(pH, 2); 
   //lcd.setCursor(0, 0);
   //lcd.print("pH: ");  //Print pH value to the LCD
