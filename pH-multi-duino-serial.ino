@@ -18,15 +18,17 @@ SimpleTimer timer; // Create a Timer object called "timer"!
 const int trigPin = 12; 
 const int echoPin = 13; //distance measurer
 
-const byte switchPin = 2; //float switch
+const byte switchPin1 = 31; //float switch
+const byte switchPin2 = 33; //float switch
+const byte switchPin3 = 35; //float switch
+const byte switchPin4 = 37; //float switch
 
 long duration;
 int distanceCm, volume;
 
 int algaecase; //variable used for determining which pair of algae tanks are being used (1+2 or 3+4)
-int valveoutput;
-int turbidity;
-int turbsetpoint;
+int turbidity, turbsetpoint, valveoutput;
+int turb;
 
 
 const byte pHpin1 = A8;
@@ -45,10 +47,12 @@ const int relayPin7 = 8;
 //int inPin = 22; //Just wire this pin dirrectly to GND if you want to leave ethernet constantly on. If you want to test the code before connecting to the servers, leave the pin disconnected.
 //int ethbutton = digitalRead(inPin); 
 
+//LED widgets:
 WidgetLED led1(V8); //Connect a LED widget to Virtual pin 7 in the app
 WidgetLED led2(V9); //Connect a LED widget to Virtual pin 7 in the app
 WidgetLED led3(V10); //Connect a LED widget to Virtual pin 7 in the app
 WidgetLED led4(V11); //Connect a LED widget to Virtual pin 7 in the app
+WidgetLED led5(V40); //Connect a LED widget to Virtual pin 7 in the app
 
 //int pinA = 40;  // Connected to CLK on KY-040 Rotary Encoder
 //int pinB = 42;  // Connected to DT on KY-040 Rotary Encoder
@@ -71,6 +75,15 @@ float pH3 = 10;
 float Po4;
 float pH4 = 10;
 
+#include <NewPing.h> //using NewPing sonar library
+ 
+
+#define TRIGGER_PIN  12
+#define ECHO_PIN     13
+#define MAX_DISTANCE 200 //defines max measuring distance
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+
 BLYNK_WRITE(0){
   algaecase = param.asInt(); 
 }
@@ -89,7 +102,8 @@ BLYNK_WRITE(15){
 }
 
 
-void measure() { //must recode for flow logic // This function is reading data from the floatswitch and (later in the code) from distance sensor
+void measure() { //must recode for flow logic
+
     //if (digitalRead (switchPin) == LOW)
      //{
      //Serial.println ("Switch closed.");
@@ -99,23 +113,17 @@ void measure() { //must recode for flow logic // This function is reading data f
     // {
     // Serial.println ("Switch OPEN.");
      //delay (1000); 
-     // end if 
-   /* The following trigPin/echoPin cycle is used to determine the distance of the nearest
- object by bouncing soundwaves off it */
- 
- //Trigger a HIGH pulse for 2 or more microseconds
- //Give a short LOW pulse before sending a HIGH one
-  
-digitalWrite(trigPin, LOW); //make own timer for this? // Both TrigPin and EchoPin functions are related to ultrasonic distance sensor.
-//delayMicroseconds(2);
-digitalWrite(trigPin, HIGH);
-//delayMicroseconds(10);
-digitalWrite(trigPin, LOW);
-  //Now, lets read the read the bounced wave
-duration = pulseIn(echoPin, HIGH); //pulse from ultrasonic distance detector
-  //calculate the distance
-distanceCm= duration*0.034/2; //convert to centimeters
-volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
+     // end if
+
+
+Blynk.virtualWrite(V5, sonar.ping_cm());
+//Serial.print("Ping: ");
+//Serial.print(sonar.ping_cm());
+//Serial.println("cm");
+
+//digitalWrite(trigPin, LOW); //make own timer for this?
+
+
 
 //lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
 //lcd.print("Bopper: "); // Prints string "Distance" on the LCD // Bopper mean "floatswitch"
@@ -276,12 +284,24 @@ void algaetank(){
   }
 }
 
+//alternative to delay()
+void Blynk_Delay(int milli){
+   int end_time = millis() + milli;
+   while(millis() < end_time){
+    led5.on();
+    led5.off();
+       
+       yield();
+   }
+}
+
 void setup(){
   Serial.begin(9600); // initialize serial communications at 9600 bps
   
-  pinMode (switchPin, INPUT_PULLUP); //Float switch pins
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  pinMode (switchPin1, INPUT_PULLUP); //Float switch pins
+  pinMode (switchPin2, INPUT_PULLUP); //Float switch pins
+  pinMode (switchPin3, INPUT_PULLUP); //Float switch pins
+  pinMode (switchPin4, INPUT_PULLUP); //Float switch pins
 
   //lcd.begin(16, 2); // set up the LCD's number of columns and rows: 
   pinMode(relayPin1, OUTPUT);
