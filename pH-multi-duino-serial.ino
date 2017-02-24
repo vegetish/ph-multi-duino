@@ -288,7 +288,6 @@ void setup(){
   pinMode(relayPin2, OUTPUT);
   pinMode(relayPin3, OUTPUT);
   pinMode(relayPin4, OUTPUT);
-  timer.setInterval(5000, ph);
   //pinMode(inPin, INPUT_PULLUP);
   //pinMode(13, OUTPUT);
   //if (ethbutton == LOW) {
