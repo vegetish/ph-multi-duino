@@ -6,7 +6,7 @@
 #include <SoftwareSerial.h>
 #include <BlynkSimpleStream.h>
 
-char auth[] = "54a10142143d4854901d5d7bb67de132"; //Insert auth token between the " "
+char auth[] = "a5ca139a41c042b3b6810feafe4e284a"; //Insert auth token between the " "
 
 #include <SimpleTimer.h> //here is the SimpleTimer library
 SimpleTimer timer; // Create a Timer object called "timer"!
@@ -15,24 +15,27 @@ SimpleTimer timer; // Create a Timer object called "timer"!
 // initialize the library with the numbers of the interface pins
 //LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
-const int trigPin = 12; 
-const int echoPin = 13; //distance measurer
+//const int trigPin = 12; 
+//const int echoPin = 13; //distance measurer
 
-const byte switchPin = 2; //float switch
+const byte switchPin1 = 31; //float switch
+const byte switchPin2 = 33; //float switch
+const byte switchPin3 = 35; //float switch
+const byte switchPin4 = 37; //float switch
 
 long duration;
 int distanceCm, volume;
 
 int algaecase; //variable used for determining which pair of algae tanks are being used (1+2 or 3+4)
-int valveoutput;
-int turbidity;
-int turbsetpoint;
+
+int turbidity, turbsetpoint, valveoutput;
 
 
 const byte pHpin1 = A8;
 const byte pHpin2 = A9;
 const byte pHpin3 = A10;
 const byte pHpin4 = A11;// Connect the sensor's Po output to an analogue pin - whichever one you choose
+int turb;
 const int relayPin1 = 2;
 const int relayPin2 = 3;
 const int relayPin3 = 4;
@@ -49,6 +52,7 @@ WidgetLED led1(V8); //Connect a LED widget to Virtual pin 7 in the app
 WidgetLED led2(V9); //Connect a LED widget to Virtual pin 7 in the app
 WidgetLED led3(V10); //Connect a LED widget to Virtual pin 7 in the app
 WidgetLED led4(V11); //Connect a LED widget to Virtual pin 7 in the app
+WidgetLED led5(V40); //Connect a LED widget to Virtual pin 7 in the app
 
 //int pinA = 40;  // Connected to CLK on KY-040 Rotary Encoder
 //int pinB = 42;  // Connected to DT on KY-040 Rotary Encoder
@@ -61,7 +65,7 @@ float encoderPosCount4 = 78; //default setpoint at startup set to 8.0
 //int aVal;
 //boolean bCW;
 
-// Variables: pH set to 10 by default to avoid CO2 valves activting on arduino boot
+// Variables:-
 float Po1;
 float pH1 = 10;
 float Po2;
@@ -70,6 +74,14 @@ float Po3;
 float pH3 = 10;
 float Po4;
 float pH4 = 10;
+
+#include <NewPing.h> //using NewPing sonar library
+ 
+#define TRIGGER_PIN  12
+#define ECHO_PIN     13
+#define MAX_DISTANCE 200
+ 
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
 BLYNK_WRITE(0){
   algaecase = param.asInt(); 
@@ -89,7 +101,7 @@ BLYNK_WRITE(15){
 }
 
 
-void measure() { //must recode for flow logic // This function is reading data from the floatswitch and (later in the code) from distance sensor
+void measure() { //must recode for flow logic
     //if (digitalRead (switchPin) == LOW)
      //{
      //Serial.println ("Switch closed.");
@@ -99,26 +111,24 @@ void measure() { //must recode for flow logic // This function is reading data f
     // {
     // Serial.println ("Switch OPEN.");
      //delay (1000); 
-     // end if 
-   /* The following trigPin/echoPin cycle is used to determine the distance of the nearest
- object by bouncing soundwaves off it */
- 
- //Trigger a HIGH pulse for 2 or more microseconds
- //Give a short LOW pulse before sending a HIGH one
-  
-digitalWrite(trigPin, LOW); //make own timer for this? // Both TrigPin and EchoPin functions are related to ultrasonic distance sensor.
+     // end if
+
+Blynk.virtualWrite(V5, sonar.ping_cm());
+//Serial.print("Ping: ");
+//Serial.print(sonar.ping_cm());
+//Serial.println("cm");
+
+//digitalWrite(trigPin, LOW); //make own timer for this?
 //delayMicroseconds(2);
-digitalWrite(trigPin, HIGH);
+//digitalWrite(trigPin, HIGH);
 //delayMicroseconds(10);
-digitalWrite(trigPin, LOW);
-  //Now, lets read the read the bounced wave
-duration = pulseIn(echoPin, HIGH); //pulse from ultrasonic distance detector
-  //calculate the distance
-distanceCm= duration*0.034/2; //convert to centimeters
-volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
+//digitalWrite(trigPin, LOW);
+//duration = pulseIn(echoPin, HIGH); //pulse from ultrasonic distance detector
+//distanceCm= duration*0.034/2; //convert to centimeters
+//volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
 
 //lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
-//lcd.print("Bopper: "); // Prints string "Distance" on the LCD // Bopper mean "floatswitch"
+//lcd.print("Bopper: "); // Prints string "Distance" on the LCD
 //lcd.print(switchPin); // Prints the distance value from the sensor
 //lcd.print(" cm");
 //lcd.setCursor(0,1);
@@ -128,17 +138,10 @@ volume = map(distanceCm, 36, 3, 29, 70); //convert to liters
 //Serial.println(duration);
 
 }
-// modified map function for float values. Now we don't need an additional variables (pHm1,pHm2,pHm3,pHm4)
-float map_float(float value,float fromLow, float fromHigh, float toLow, float toHigh){
-	return (toLow + (value - fromLow) * ((toHigh - toLow) / (fromHigh - fromLow)));	
-	//float k = (toHigh - toLow) / (fromHigh - fromLow);
-	//float len_v = value - fromLow;
-	//float new_len = len_v * k;
-	//return (toLow + new_len);	
-}  
+
 
 void ph(){
-  Po1 = (1023 - analogRead(pHpin1)); // it is done convert value from analogue sensor to 
+  Po1 = (1023 - analogRead(pHpin1));
   Po2 = (1023 - analogRead(pHpin2));
   Po3 = (1023 - analogRead(pHpin3));
   Po4 = (1023 - analogRead(pHpin4));
@@ -147,22 +150,18 @@ void ph(){
   //Serial.print(Po3); //This is the raw voltage value for the pH module
   //Serial.print(Po4); //This is the raw voltage value for the pH module
    //Calibration values:
-   //405@pH7 // These values were checked/calibrated manually (we need to do it to read values from analogue sensors correctly 
+   //405@pH7
    //290@ph4
 
   //Serial.print(", ph =");
-  float pH1 = map_float(Po1, 290, 406, 4, 7);
-  float pH2 = map_float(Po2, 290, 406, 4, 7);
-  float pH3 = map_float(Po3, 290, 406, 4, 7);
-  float pH4 = map_float(Po4, 290, 406, 4, 7);
-  //float pHm1 = map(Po1, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
-  //float pH1 = (pHm1/100);
-  //float pHm2 = map(Po2, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
-  //float pH2 = (pHm2/100);
-  //float pHm3 = map(Po3, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
-  //float pH3 = (pHm3/100);
-  //float pHm4 = map(Po4, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
-  //float pH4 = (pHm4/100);
+  float pHm1 = map(Po1, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
+  float pH1 = (pHm1/100);
+  float pHm2 = map(Po2, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
+  float pH2 = (pHm2/100);
+  float pHm3 = map(Po3, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
+  float pH3 = (pHm3/100);
+  float pHm4 = map(Po4, 290, 406, 400, 700); //maps voltage(Po) from calibration values at 4.00 and 7.00 pH
+  float pH4 = (pHm4/100);
   //Serial.println(pH, 2); 
   //lcd.setCursor(0, 0);
   //lcd.print("pH: ");  //Print pH value to the LCD
@@ -276,18 +275,32 @@ void algaetank(){
   }
 }
 
+void Blynk_Delay(int milli){
+   int end_time = millis() + milli;
+   while(millis() < end_time){
+    led5.on();
+    led5.off();
+       
+       yield();
+   }
+}
+
 void setup(){
   Serial.begin(9600); // initialize serial communications at 9600 bps
   
-  pinMode (switchPin, INPUT_PULLUP); //Float switch pins
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  pinMode (switchPin1, INPUT_PULLUP); //Float switch pins
+  pinMode (switchPin2, INPUT_PULLUP); //Float switch pins
+  pinMode (switchPin3, INPUT_PULLUP); //Float switch pins
+  pinMode (switchPin4, INPUT_PULLUP); //Float switch pins
+ // pinMode(trigPin, OUTPUT);
+  //pinMode(echoPin, INPUT);
 
   //lcd.begin(16, 2); // set up the LCD's number of columns and rows: 
   pinMode(relayPin1, OUTPUT);
   pinMode(relayPin2, OUTPUT);
   pinMode(relayPin3, OUTPUT);
   pinMode(relayPin4, OUTPUT);
+  timer.setInterval(5000, ph);
   //pinMode(inPin, INPUT_PULLUP);
   //pinMode(13, OUTPUT);
   //if (ethbutton == LOW) {
