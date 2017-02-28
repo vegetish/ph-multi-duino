@@ -117,7 +117,7 @@ void measure() { //must recode for flow logic
 
 
 Blynk.virtualWrite(V5, sonar.ping_cm());
-volume = map(sonar.ping_cm, 36, 3, 29, 70);
+volume = map(sonar.ping_cm(), 36, 3, 29, 70);
 //Serial.print("Ping: ");
 //Serial.print(sonar.ping_cm());
 //Serial.println("cm");
