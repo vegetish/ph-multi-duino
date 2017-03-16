@@ -330,3 +330,46 @@ void loop(){
   //encoder();
 }
 
+#define VALVE_K_RELAY_PIN 15 //needed to be replaced by actual pin-number
+
+#define FS_A_MIN 5 // defined floatswithces (random pins)
+#define FS_A_MAX 6
+#define FS_B_MIN 7
+#define FS_B_MAX 8
+
+#define PUMP_A 9
+#define PUMP_B 10 
+
+
+void maxlevel_K_tank() { // "void" because we don't expect result in physical world, but only in virtual
+   int volume = map(sonar.ping_cm(), 36, 3, 29, 70); //measurement of water level
+   if (volume >= 56){
+       digitalWrite(VALVE_K_RELAY_PIN, HIGH);  // If I need to open appropriate valve, then I need to apply voltage to the corresponding relay
+   }
+}
+
+void maxlevel_A_tank() { 
+	if (digitalRead(FS_A_MAX) == HIGH) { // If FS read is high then...
+		digitalWrite(VALVE_K_RELAY_PIN, LOW);
+		digitalWrite(PUMP_A, HIGH);
+	}
+}
+
+void minlevel_A_tank() {
+	if (digitalRead(FS_A_MIN) == LOW) {
+		digitalWrite(PUMP_A, LOW);
+	}
+}
+
+void maxlevel_B_tank() {
+	if (digitalRead(FS_B_MAX) == HIGH) {
+		digitalWrite(PUMP_B, HIGH);
+	}
+}
+
+void minlevel_B_tank() {
+	if (digitalRead(FS_B_MIN) == LOW) {
+		digitalWrite(PUMP_B, LOW);
+	}
+}
+
