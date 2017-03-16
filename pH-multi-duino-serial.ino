@@ -321,6 +321,9 @@ void setup(){
   timer.setInterval(120000, algaetank);
   
   //timer.setInterval(2000, setpointwriter);
+  valve_close_timer_ID = timer.setInterval(500, close_valve); // Need to get a timer ID which is respnsible for closing of valve
+  timer.disable(valve_close_timer_ID);
+	
 }
 
 
@@ -329,4 +332,48 @@ void loop(){
   timer.run();
   //encoder();
 }
+
+#define LEVEL_DIFFERENCE_FOR_1L 1
+
+int water_adding_valve_pin[] = {2, 3, 4, 5};  // array of pin-numbers, where algae-valves  are connected
+int current_tank = 0; //index of the pin from water_adding_valve_pin-array, which is used now for the water-adding
+int prev_level ;
+int valve_close_timer_ID; // Timer that is responsible for the function of closing of valve
+
+void turb_control(){ 
+    int turbidity = get_turbidity();
+    if (turbidity < turbsetpoint){
+	prev_level = sonar.ping_cm();
+	digitalWrite(water_adding_valve_pin[current_tank], HIGH);
+	timer.enable(valve_close_timer_ID);
+    }
+}
+
+int get_rurbidity(){ // To be continued...
+	int turb = analogRead(TURBIDITY_SENSOR_PIN);
+	return turb;
+}
+
+void close_valve (){
+    int curr_level = sonar.ping_cm();
+    if ((curr_level - prev_level) >= LEVEL_DIFFERENCE_FOR_1L){
+	digitalWrite(water_adding_valve_pin[current_tank], LOW);
+	timer.disable(valve_close_timer_ID);
+	switch_tank();
+    }
+}
+
+void switch_tank(){
+    if (current_tank == 0)
+	current_tank = 1;  
+  else if (current_tank == 1)
+	current_tank = 0;
+  else if (current_tank == 2)
+	current_tank = 3;
+   else if (current_tank == 3)
+	current_tank = 2;
+}
+
+
+
 
