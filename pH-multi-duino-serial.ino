@@ -82,7 +82,91 @@ float pH4 = 10;
 #define ECHO_PIN     13
 #define MAX_DISTANCE 200 //defines max measuring distance
 
+#define LEVEL_DIFFERENCE_FOR_1L 1
+int water_adding_valve_pin[] = {2, 3, 4, 5};  // array of pin-numbers, where algae-valves  are connected
+int current_tank = 0; //index of the pin from water_adding_valve_pin-array, which is used now for the water-adding
+int prev_level ;
+int valve_close_timer_ID; // Timer that is responsible for the function of closing of valve
+
+#define VALVE_K_RELAY_PIN 15 //needed to be replaced by actual pin-number
+
+#define FS_A_MIN 5 // defined floatswithces (random pins)
+#define FS_A_MAX 6
+#define FS_B_MIN 7
+#define FS_B_MAX 8
+
+#define PUMP_A 9
+#define PUMP_B 10 
+
+
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+
+void turb_control(){ 
+    int turbidity = get_turbidity();
+    if (turbidity < turbsetpoint){
+	prev_level = sonar.ping_cm();
+	digitalWrite(water_adding_valve_pin[current_tank], HIGH);
+	timer.enable(valve_close_timer_ID);
+    }
+}
+
+int get_rurbidity(){ // To be continued...
+	int turb = analogRead(TURBIDITY_SENSOR_PIN);
+	return turb;
+}
+
+void close_valve (){
+    int curr_level = sonar.ping_cm();
+    if ((curr_level - prev_level) >= LEVEL_DIFFERENCE_FOR_1L){
+	digitalWrite(water_adding_valve_pin[current_tank], LOW);
+	timer.disable(valve_close_timer_ID);
+	switch_tank();
+    }
+}
+
+void switch_tank(){
+    if (current_tank == 0)
+	current_tank = 1;  
+  else if (current_tank == 1)
+	current_tank = 0;
+  else if (current_tank == 2)
+	current_tank = 3;
+   else if (current_tank == 3)
+	current_tank = 2;
+}
+
+void maxlevel_K_tank() { // "void" because we don't expect result in physical world, but only in virtual
+   int volume = map(sonar.ping_cm(), 36, 3, 29, 70); //measurement of water level
+   if (volume >= 56){
+       digitalWrite(VALVE_K_RELAY_PIN, HIGH);  // If I need to open appropriate valve, then I need to apply voltage to the corresponding relay
+   }
+}
+
+void maxlevel_A_tank() { 
+	if (digitalRead(FS_A_MAX) == HIGH) { // If FS read is high then...
+		digitalWrite(VALVE_K_RELAY_PIN, LOW);
+		digitalWrite(PUMP_A, HIGH);
+	}
+}
+
+void minlevel_A_tank() {
+	if (digitalRead(FS_A_MIN) == LOW) {
+		digitalWrite(PUMP_A, LOW);
+	}
+}
+
+void maxlevel_B_tank() {
+	if (digitalRead(FS_B_MAX) == HIGH) {
+		digitalWrite(PUMP_B, HIGH);
+	}
+}
+
+void minlevel_B_tank() {
+	if (digitalRead(FS_B_MIN) == LOW) {
+		digitalWrite(PUMP_B, LOW);
+	}
+}
+
 
 BLYNK_WRITE(0){
   algaecase = param.asInt(); 
@@ -332,48 +416,4 @@ void loop(){
   timer.run();
   //encoder();
 }
-
-#define LEVEL_DIFFERENCE_FOR_1L 1
-
-int water_adding_valve_pin[] = {2, 3, 4, 5};  // array of pin-numbers, where algae-valves  are connected
-int current_tank = 0; //index of the pin from water_adding_valve_pin-array, which is used now for the water-adding
-int prev_level ;
-int valve_close_timer_ID; // Timer that is responsible for the function of closing of valve
-
-void turb_control(){ 
-    int turbidity = get_turbidity();
-    if (turbidity < turbsetpoint){
-	prev_level = sonar.ping_cm();
-	digitalWrite(water_adding_valve_pin[current_tank], HIGH);
-	timer.enable(valve_close_timer_ID);
-    }
-}
-
-int get_rurbidity(){ // To be continued...
-	int turb = analogRead(TURBIDITY_SENSOR_PIN);
-	return turb;
-}
-
-void close_valve (){
-    int curr_level = sonar.ping_cm();
-    if ((curr_level - prev_level) >= LEVEL_DIFFERENCE_FOR_1L){
-	digitalWrite(water_adding_valve_pin[current_tank], LOW);
-	timer.disable(valve_close_timer_ID);
-	switch_tank();
-    }
-}
-
-void switch_tank(){
-    if (current_tank == 0)
-	current_tank = 1;  
-  else if (current_tank == 1)
-	current_tank = 0;
-  else if (current_tank == 2)
-	current_tank = 3;
-   else if (current_tank == 3)
-	current_tank = 2;
-}
-
-
-
 
