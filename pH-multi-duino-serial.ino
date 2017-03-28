@@ -64,7 +64,7 @@
 #define FS_A_MAX 6
 #define FS_B_MIN 7
 #define FS_B_MAX 8
-#define FS_AL1_MAX 15 //Floatswitches for algae tanks (In case if we are going to install them)
+#define FS_AL1_MAX 15 //Floatswitches for algae tanks.
 #define FS_AL2_MAX 15
 #define FS_AL3_MAX 15
 #define FS_AL4_MAX 15
@@ -76,7 +76,7 @@
 #define PH2_PIN A9
 #define PH3_PIN A10
 #define PH4_PIN A11  // Connect the sensor's Po output to an analogue pin - whichever one you choose
-
+#define PH_K_TANK_PIN A12 //pH sensor in K-tank
 
 /// THINGS THAT ARE RELEVANT TO BLYNK
 //#define BLYNK_PRINT Serial    // Comment this out to disable prints and save space
@@ -111,30 +111,35 @@ float encoderPosCount1 = 78; //default setpoint at startup set to 8.0 (is correc
 float encoderPosCount2 = 78; //default setpoint at startup set to 8.0 (in these lines this variable is beeing created)
 float encoderPosCount3 = 78; //default setpoint at startup set to 8.0
 float encoderPosCount4 = 78; //default setpoint at startup set to 8.0
+float encoderPosCount5 = 78; 
+float encoderPosCount6 = 78; 
+// We need to find the border values for copepods and set the inn for PosCount5 and PosCount6.
 
-
-float Po1; // Variables: pH set to 10 by default to avoid CO2 valves activting on arduino boot
+// Variables: pH set to 10 by default to avoid CO2 valves activting on arduino boot
+// Here variables were declared
 float pH1 = 10;
-float Po2;
 float pH2 = 10;
-float Po3;
 float pH3 = 10;
-float Po4;
 float pH4 = 10;
+float pH_K_tank = 10;
 
-int water_adding_valve_pin[] = {2, 3, 4, 5};  // array of pin-numbers, where algae-valves  are connected
+int water_adding_valve_pin[] = {WATER_VALVE_AL1_PIN, WATER_VALVE_AL2_PIN, WATER_VALVE_AL3_PIN, WATER_VALVE_AL4_PIN}; // array of pin-numbers, where algae-valves  are connected
 int current_tank = 0; //index of the pin from water_adding_valve_pin-array, which is used now for the water-adding.
 // int current_tank = 0 or 2 is going to be used once in two weeks (only to initialize the process of tankswitching)
 int prev_level;
 int valve_close_timer_ID; // Timer that is responsible for the function of closing of valve
 
-
-
-///Functions
-
 int turbsetpoint = 1000;
 int turbidity_measure_counter = 0; //I need a variable that is going to serve as a measurments counter
 int total_turbidity_measurments = 0; //Here we are going to store a total number of turbidity measurments
+
+boolean allow_work_of_K_valve = true;
+int algae_FS_pin[] = {FS_AL1_MAX, FS_AL2_MAX, FS_AL3_MAX, FS_AL4_MAX}; // We create an array of constants that will contain the pins of all four FS in algaetanks
+
+
+
+///Functions (there are always brackets after the function, f(x), brackets can also be empty)
+
 
 
 void turb_control(){ 
@@ -180,9 +185,9 @@ void switch_tank(){
 }
 
 void maxlevel_K_tank() { // "void" because we don't expect result in physical world, but only in virtual
-  // /Measure water level, and if it is sufficient, open the valve under K-tank
+	// /Measure water level, and if it is sufficient, open the valve under K-tank
    int volume = map(sonar.ping_cm(), 36, 3, 29, 70); //measurement of water level
-   if (volume >= MAX_WATER_VOLUME_K_TANK){
+   if ((volume >= MAX_WATER_VOLUME_K_TANK) && allow_work_of_K_valve){ // To ampersands mean a logical "and" // It causes both conditions to be fulfilled
        digitalWrite(VALVE_K_RELAY_PIN, HIGH);  // If I need to open appropriate valve, then I need to apply voltage to the corresponding relay
    }
 }
@@ -211,12 +216,24 @@ void maxlevel_B_tank() {
 
 void minlevel_B_tank() {
   //If the lower float switch in the tank-B is closed, turn off the pump in the tank-B
-  if (digitalRead(FS_B_MIN) == HIGH) {
+  if (digitalRead(FS_B_MIN) == HIGH) { // here "high" means "contact has open"
     digitalWrite(PUMP_B, LOW);
   }
 }
 
-
+void maxlevel_algae_tanks() {
+	allow_work_of_K_valve = true;
+	for(int al_tank_index = 0; al_tank_index < 4; al_tank_index++){ // Is called cycle with a counter.
+		// That is, al_tank_index first turn to the tank zero, then consequently turn to the tanks one, two and three (therefore it is written "> 4")
+		if (digitalRead(algae_FS_pin[al_tank_index]) == LOW) { // If the upper float switch in the tank-A is closed, close the valve and switch on the pump in the tank-A
+			digitalWrite(VALVE_K_RELAY_PIN, LOW);
+			digitalWrite(PUMP_A, LOW);
+			digitalWrite(PUMP_B, LOW);
+			allow_work_of_K_valve = false;
+			// These four lines make it so that we consequently shut down the whole bottom part of RAS, and then forbid to turn it on again
+		}	
+	} 
+}
 
 /* void measure() { //must recode for flow logic
   
@@ -267,6 +284,16 @@ BLYNK_WRITE(14){
 BLYNK_WRITE(15){
   encoderPosCount4 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
 }
+BLYNK_WRITE(16){ // Value is higher than MIN value that is set here
+  encoderPosCount5 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
+}
+BLYNK_WRITE(17){ // Value is lower than MAX value that is set here
+  encoderPosCount6 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
+}
+
+
+
+
 
 // modified map function for float values. Now we don't need an additional variables (pHm1,pHm2,pHm3,pHm4)
 float map_float(float value,float fromLow, float fromHigh, float toLow, float toHigh){
@@ -278,10 +305,12 @@ float map_float(float value,float fromLow, float fromHigh, float toLow, float to
 }  
 
 void ph(){
-  Po1 = (1023 - analogRead(PH1_PIN)); // it is done convert value from analogue sensor to 
-  Po2 = (1023 - analogRead(PH2_PIN));
-  Po3 = (1023 - analogRead(PH3_PIN));
-  Po4 = (1023 - analogRead(PH4_PIN));
+  pH1 = (1023 - analogRead(PH1_PIN)); // it is done convert value from analogue sensor to 
+  pH2 = (1023 - analogRead(PH2_PIN));
+  pH3 = (1023 - analogRead(PH3_PIN));
+  pH4 = (1023 - analogRead(PH4_PIN));
+  pH_K_tank = (1023 - analogRead (PH_K_TANK_PIN));
+  
   //Serial.print(Po1); //This is the raw voltage value for the pH module
   //Serial.print(Po2); //This is the raw voltage value for the pH module
   //Serial.print(Po3); //This is the raw voltage value for the pH module
@@ -291,11 +320,14 @@ void ph(){
    //290@ph4
 
   //Serial.print(", ph =");
-  float pH1 = map_float(Po1, 290, 406, 4, 7);
-  float pH2 = map_float(Po2, 290, 406, 4, 7);
-  float pH3 = map_float(Po3, 290, 406, 4, 7);
-  float pH4 = map_float(Po4, 290, 406, 4, 7);
+  pH1 = map_float(pH1, 290, 406, 4, 7);
+  pH2 = map_float(pH2, 290, 406, 4, 7);
+  pH3 = map_float(pH3, 290, 406, 4, 7);
+  pH4 = map_float(pH4, 290, 406, 4, 7);
+  pH_K_tank = map_float(pH_K_tank, 290, 406, 4, 7);
 
+ 
+ 
   //Serial.println(pH, 2); 
   //lcd.setCursor(0, 0);
   //lcd.print("pH: ");  //Print pH value to the LCD
@@ -312,6 +344,7 @@ void ph(){
   Blynk.virtualWrite(V2, pH2);
   Blynk.virtualWrite(V3, pH3);
   Blynk.virtualWrite(V4, pH4);
+  Blynk.virtualWrite(V5, pH_K_tank);
   
    if (pH1 > (encoderPosCount1/10))
 {
@@ -373,7 +406,19 @@ else
   led4.off();      
   
 }
+  if ((pH_K_tank > (encoderPosCount5/10)) && (pH_K_tank < (encoderPosCount6/10))) // To show if pH is within reasonable values 
+{ 
+  led5.off();
 }
+else
+{
+  led5.on();      
+  
+}
+}
+
+
+
 
 void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
     Blynk.virtualWrite(V21, (encoderPosCount1/10));  
@@ -407,14 +452,16 @@ pinMode(FS_A_MIN, INPUT_PULLUP);          // defined floatswithces (random pins)
 pinMode(FS_A_MAX, INPUT_PULLUP);
 pinMode(FS_B_MIN, INPUT_PULLUP);
 pinMode(FS_B_MAX, INPUT_PULLUP);
-pinMode(FS_AL1_MAX, INPUT_PULLUP); //Floatswitches for algae tanks (In case if we are going to install them)
+pinMode(FS_AL1_MAX, INPUT_PULLUP); //Floatswitches for algae tanks
 pinMode(FS_AL2_MAX, INPUT_PULLUP);
 pinMode(FS_AL3_MAX, INPUT_PULLUP);
 pinMode(FS_AL4_MAX, INPUT_PULLUP);
 pinMode(PUMP_A, OUTPUT);
 pinMode(PUMP_B, OUTPUT); 
 // Analog channels are not configurable for INPUT or OUTPUT. It is only relevant for digital pins
+// Howerver, analog pins can be configured to work as digital pins.
 
+ 
   //lcd.begin(16, 2); // set up the LCD's number of columns and rows: 
   //if (ethbutton == LOW) {
   Blynk.begin(Serial, auth);
@@ -443,7 +490,13 @@ pinMode(PUMP_B, OUTPUT);
 
 void loop(){
   Blynk.run(); 
-  timer.run(); 
+  timer.run(); //For those functions that are registered in the loop, they are called with each tact, that is we don't need to assign a specific set.interval function
+	maxlevel_K_tank(); // However we still need to write those functions in void.loop, namely:
+	maxlevel_A_tank(); 
+	minlevel_A_tank();
+	maxlevel_B_tank();
+	minlevel_B_tank();
+	maxlevel_algae_tanks();
 }
 
 
