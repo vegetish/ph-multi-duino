@@ -1,31 +1,7 @@
 //Change serial to debug serial // 
-
-
 //The ethernet button is used to tell the arduino board if it's connected to the internet through the ethernet cable or not. If the button is turned off, then it won't spend time trying to connect to the server.
 //int inPin = 22; //Just wire this pin dirrectly to GND if you want to leave ethernet constantly on. If you want to test the code before connecting to the servers, leave the pin disconnected.
 //int ethbutton = digitalRead(inPin); 
-
-
-//int pinA = 40;  // Connected to CLK on KY-040 Rotary Encoder
-//int pinB = 42;  // Connected to DT on KY-040 Rotary Encoder
-//SW(button) pin on KY-040 is not used
-
-//int pinALast;  
-//int aVal;
-//boolean bCW;
-
-
-//alternative to delay()
-//void Blynk_Delay(int milli){
-//   int end_time = millis() + milli;
-//   while(millis() < end_time){
-//    led5.on();
-//    led5.off();
-//       yield();
-//   }
-//}
-
-
 
 /// LIBRARIES THAT ARE IN USE (".h" is an abbreviation for header)
 //#include <DHT.h> (temperature and humidity sensors)
@@ -38,7 +14,8 @@
 #include <SimpleTimer.h> //here is the SimpleTimer library
 #include <NewPing.h> //using NewPing sonar library
 #include <FlowMeter.h> //using a library for the flowmeter
-
+#include <SoftwareSerial.h> 
+#include <BlynkSimpleStream.h>
 
 /// PINS THAT ARE USED IN THIS PROGRAM (Fritzing!) Most of the pins are random. We need to find out relevant pins.
 
@@ -80,16 +57,15 @@
 
 /// THINGS THAT ARE RELEVANT TO BLYNK
 //#define BLYNK_PRINT Serial    // Comment this out to disable prints and save space
-#include <SoftwareSerial.h> 
-#include <BlynkSimpleStream.h>
+
 
 char auth[] = "x"; //Insert auth token between the " "
 //LED widgets:
-WidgetLED led1(V8); //Connect a LED widget to Virtual pin 7 in the app
-WidgetLED led2(V9); //Connect a LED widget to Virtual pin 7 in the app
-WidgetLED led3(V10); //Connect a LED widget to Virtual pin 7 in the app
-WidgetLED led4(V11); //Connect a LED widget to Virtual pin 7 in the app
-WidgetLED led5(V12); //Connect a LED widget to Virtual pin 7 in the app
+WidgetLED led1(V8); //Connect a LED widget to Virtual pin 8 in the app.
+WidgetLED led2(V9); //
+WidgetLED led3(V10); //
+WidgetLED led4(V11); //
+WidgetLED led5(V12); //
 
 
 
@@ -105,14 +81,15 @@ float STANDARD_TAKEOUT_FROM_AL = 1.0;// standard amount of water that is taken f
 
 SimpleTimer timer; // Create a Timer object called "timer"!
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); //object controlling ultrasonic distance measuerer
-FlowMeter Meter = FlowMeter(FLOWMETER_PIN); // Constructor always have the same name as class
+FlowMeter Meter = FlowMeter(FLOWMETER_PIN, FS300A); // Constructor always have the same name as class
+//Best to write in specific modell (after pin), namely FS300A 
 
-float encoderPosCount1 = 78; //default setpoint at startup set to 8.0 (is correct that it's 78 and not 7.8 because slider can only work with integers (whole numbers)?
-float encoderPosCount2 = 78; //default setpoint at startup set to 8.0 (in these lines this variable is beeing created)
-float encoderPosCount3 = 78; //default setpoint at startup set to 8.0
-float encoderPosCount4 = 78; //default setpoint at startup set to 8.0
-float encoderPosCount5 = 78; 
-float encoderPosCount6 = 78; 
+float encoderPosCount1 = 7.8; //default setpoint at startup set to 7.8 (is correct that it's 78 and not 7.8 because slider can only work with integers (whole numbers)?
+float encoderPosCount2 = 7.8; //default setpoint at startup set to 7.8 (in these lines this variable is beeing created)
+float encoderPosCount3 = 7.8; 
+float encoderPosCount4 = 7.8; 
+float encoderPosCount5 = 7.8; //default set point
+float encoderPosCount6 = 7.8; 
 // We need to find the border values for copepods and set the inn for PosCount5 and PosCount6.
 
 // Variables: pH set to 10 by default to avoid CO2 valves activting on arduino boot
@@ -235,60 +212,28 @@ void maxlevel_algae_tanks() {
 	} 
 }
 
-/* void measure() { //must recode for flow logic
-  
-    //if (digitalRead (switchPin) == LOW)
-     //{
-     //Serial.println ("Switch closed.");
-     //delay (1000); 
-     //} // end if switchState is LOW
-     //if (digitalRead (switchPin) == HIGH)
-    // {
-    // Serial.println ("Switch OPEN.");
-     //delay (1000); 
-     // end if
 
-Blynk.virtualWrite(V5, sonar.ping_cm());
-int volume = map(sonar.ping_cm(), 36, 3, 29, 70);
-//Serial.print("Ping: ");
-//Serial.print(sonar.ping_cm());
-//Serial.println("cm");
-
-//digitalWrite(TRIGGER_PIN, LOW); //make own timer for this?
-
-//lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
-//lcd.print("Bopper: "); // Prints string "Distance" on the LCD // Bopper mean "floatswitch"
-//lcd.print(switchPin); // Prints the distance value from the sensor
-//lcd.print(" cm");
-//lcd.setCursor(0,1);
-//lcd.print("Volume");
-//lcd.print(volume);
-//lcd.print("L");
-//Serial.println(duration);
-}
-*/
-BLYNK_WRITE(66){
+BLYNK_WRITE(66){ //Changes are set by the actions application itself
   STANDARD_TAKEOUT_FROM_AL = param.asFloat(); 
 }
 
-
 BLYNK_WRITE(12){
-  encoderPosCount1 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
-}
+  encoderPosCount1 = param.asFloat(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
+} //param.asInt() Read the parameter as a whole number
 BLYNK_WRITE(13){
-  encoderPosCount2 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
+  encoderPosCount2 = param.asFloat(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
 }
 BLYNK_WRITE(14){
-  encoderPosCount3 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
+  encoderPosCount3 = param.asFloat(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
 }
 BLYNK_WRITE(15){
-  encoderPosCount4 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
+  encoderPosCount4 = param.asFloat(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
 }
 BLYNK_WRITE(16){ // Value is higher than MIN value that is set here
-  encoderPosCount5 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
+  encoderPosCount5 = param.asFloat(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
 }
 BLYNK_WRITE(17){ // Value is lower than MAX value that is set here
-  encoderPosCount6 = param.asInt(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
+  encoderPosCount6 = param.asFloat(); //Connect a slider widget to virtual pin 3 in the app. Slider range should be 0 to 140.
 }
 
 
@@ -346,7 +291,7 @@ void ph(){
   Blynk.virtualWrite(V4, pH4);
   Blynk.virtualWrite(V5, pH_K_tank);
   
-   if (pH1 > (encoderPosCount1/10))
+   if (pH1 > (encoderPosCount1))
 {
   digitalWrite(CO2_VALVE_AL1_PIN, HIGH); 
   //lcd.setCursor(8, 0);
@@ -361,7 +306,7 @@ else
   led1.off();      
   
 }
-   if (pH2 > (encoderPosCount2/10)) //This if/else statement turns the valve on if the pH value is above the setpoint, or off if it's below the setpoint. Modify according to your need.
+   if (pH2 > (encoderPosCount2)) //This if/else statement turns the valve on if the pH value is above the setpoint, or off if it's below the setpoint. Modify according to your need.
 {
   digitalWrite(CO2_VALVE_AL2_PIN, HIGH); 
   //lcd.setCursor(8, 0);
@@ -376,7 +321,7 @@ else
   led2.off();      
   
 }
-   if (pH3 > (encoderPosCount3/10)) //This if/else statement turns the valve on if the pH value is above the setpoint, or off if it's below the setpoint. Modify according to your need.
+   if (pH3 > (encoderPosCount3) //This if/else statement turns the valve on if the pH value is above the setpoint, or off if it's below the setpoint. Modify according to your need.
 {
   digitalWrite(CO2_VALVE_AL3_PIN, HIGH); 
   //lcd.setCursor(8, 0);
@@ -391,7 +336,7 @@ else
   led3.off();      
   
 }
-   if (pH4 > (encoderPosCount4/10)) 
+   if (pH4 > (encoderPosCount4)) 
 {
   digitalWrite(CO2_VALVE_AL4_PIN, HIGH); 
   //lcd.setCursor(8, 0);
@@ -406,7 +351,7 @@ else
   led4.off();      
   
 }
-  if ((pH_K_tank > (encoderPosCount5/10)) && (pH_K_tank < (encoderPosCount6/10))) // To show if pH is within reasonable values 
+  if ((pH_K_tank > (encoderPosCount5)) && (pH_K_tank < (encoderPosCount6))) // To show if pH is within reasonable values 
 { 
   led5.off();
 }
@@ -420,12 +365,12 @@ else
 
 
 
-void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
+/* void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
     Blynk.virtualWrite(V21, (encoderPosCount1/10));  
     Blynk.virtualWrite(V22, (encoderPosCount2/10));
     Blynk.virtualWrite(V23, (encoderPosCount3/10));
     Blynk.virtualWrite(V24, (encoderPosCount4/10));   
-}
+}*/
 
 void MeterISR() {
   // let our flow meter count the pulses
@@ -466,7 +411,9 @@ pinMode(PUMP_B, OUTPUT);
   //if (ethbutton == LOW) {
   Blynk.begin(Serial, auth);
   //Blynk.begin(auth, "blynk-cloud.com");
-  timer.setInterval(2100, blynker1); //the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
+  //timer.setInterval(2100, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
+  //the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
+  
   timer.setInterval(24000, ph);
   //timer.setInterval(25000, measure);
   timer.setInterval (60000, turb_control); // timer will call a turb_control function every minute
@@ -500,4 +447,44 @@ void loop(){
 }
 
 
+/* void measure() { //must recode for flow logic
+  
+    //if (digitalRead (switchPin) == LOW)
+     //{
+     //Serial.println ("Switch closed.");
+     //delay (1000); 
+     //} // end if switchState is LOW
+     //if (digitalRead (switchPin) == HIGH)
+    // {
+    // Serial.println ("Switch OPEN.");
+     //delay (1000); 
+     // end if
+
+Blynk.virtualWrite(V5, sonar.ping_cm());
+int volume = map(sonar.ping_cm(), 36, 3, 29, 70);
+//Serial.print("Ping: ");
+//Serial.print(sonar.ping_cm());
+//Serial.println("cm");
+
+//digitalWrite(TRIGGER_PIN, LOW); //make own timer for this?
+
+//lcd.setCursor(0,0); // Sets the location at which subsequent text written to the LCD will be displayed
+//lcd.print("Bopper: "); // Prints string "Distance" on the LCD // Bopper mean "floatswitch"
+//lcd.print(switchPin); // Prints the distance value from the sensor
+//lcd.print(" cm");
+//lcd.setCursor(0,1);
+//lcd.print("Volume");
+//lcd.print(volume);
+//lcd.print("L");
+//Serial.println(duration);
+}
+*/
+
+//int pinA = 40;  // Connected to CLK on KY-040 Rotary Encoder
+//int pinB = 42;  // Connected to DT on KY-040 Rotary Encoder
+//SW(button) pin on KY-040 is not used
+
+//int pinALast;  
+//int aVal;
+//boolean bCW;
 
