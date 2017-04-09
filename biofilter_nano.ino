@@ -3,7 +3,7 @@ int floatswitch = 7;
 
 // lowest and highest sensor readings:
 const int sensorMin = 0;     // sensor minimum
-const int sensorMax = 1024;  // sensor maximum
+const int sensorMax = 1023;  // sensor maximum
 
 void setup() {
 pinMode(floatswitch,INPUT_PULLUP);
