@@ -64,7 +64,7 @@
 #define BLYNK_PRINT DebugSerial
 SoftwareSerial DebugSerial(2, 3); // RX, TX //Need this line to send data fra arduino through another serial than USB-serial, because internett goes voer USB-serial.
                                   //RX --> Receiver, TX --> Transmitter
-char auth[] = "X"; //Insert auth token between the " "
+char auth[] = "3a4f13d3525e43749b5d0156c28d6ef7"; //Insert auth token between the " "
 
 
 /// Constants // here we use #define to write down constants. Same is done for pins, but these are constants that are not pins.
@@ -91,20 +91,24 @@ WidgetLED led1(V8); //Connect a LED widget to Virtual pin 8 in the app.
 WidgetLED led2(V9); //
 WidgetLED led3(V10); //
 WidgetLED led4(V11); //
-WidgetLED led5(V12); //
 WidgetLED led_fs_al_tanks(V20);
 
+
+
 /// VARIABLES
-// Here variables were declared
+// Here variables were declared (they are read once when program starts)
 
 float pH_setpoint_AL1 = 7.8; //default setpoint at startup set to 7.8 (is correct that it's 78 and not 7.8 because slider can only work with integers (whole numbers)?
 float pH_setpoint_AL2 = 7.8; //default setpoint at startup set to 7.8 (in these lines this variable is beeing created)
 float pH_setpoint_AL3 = 7.8; 
 float pH_setpoint_AL4 = 7.8; 
-const float min_pH_K_tank = 7.4; //default set point. Min pH i CP tanken
-const float max_pH_K_tank = 8.4; //Max pH i CP tanken
+// const float min_pH_K_tank = 7.4; //default set point. Min pH i CP tanken
+// const float max_pH_K_tank = 8.4; //Max pH i CP tanken
 // It makes sense to lie in the range typical for seawater, i.e. 7.5 to 8.3. (we can probably have a tiny bit wider borders)
 // const float for min/max is written because we are not planning to change it within a program. 
+
+
+
 
 // Variables: pH set to 10 by default to avoid CO2 valves activting on arduino boot 
 // (not really necessary to be done, because checking goes after measuring) 
@@ -258,7 +262,8 @@ void maxlevel_algae_tanks()
     } 
 }
 
-
+// Metod param.asInt() reads the parameter from "step H" widget as a whole number.
+// Respectively: param.asFloat() will read it as a float
 BLYNK_WRITE(6)  // Changes are set by the actions application itself (this is reading from a widget)
 { 
     STANDARD_TAKEOUT_FROM_AL = param.asFloat(); 
@@ -268,9 +273,6 @@ BLYNK_WRITE(12)  // Connect a step H widget to virtual pin 12 in the app.
 {
     pH_setpoint_AL1 = param.asFloat(); 
 } 
-
-// Metod param.asInt() reads the parameter from "step H" widget as a whole number.
-// Respectively: param.asFloat() will read it as a float
 
 BLYNK_WRITE(13)
 {
@@ -285,6 +287,31 @@ BLYNK_WRITE(14)
 BLYNK_WRITE(15)
 {
     pH_setpoint_AL4 = param.asFloat(); 
+}
+
+
+void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
+    Blynk.virtualWrite(V21, pH_setpoint_AL1);  
+}
+void blynker2() {
+	Blynk.virtualWrite(V22, pH_setpoint_AL2);
+}
+void blynker3() {
+    Blynk.virtualWrite(V23, pH_setpoint_AL3);
+}
+void blynker4() {
+	Blynk.virtualWrite(V24, pH_setpoint_AL4);
+}
+void blynker5() {
+	Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
+}
+
+void write_in_pH_values() { // was inside the pH-function before. Took out to put it on a timer.
+    Blynk.virtualWrite(V1, pH1);
+    Blynk.virtualWrite(V2, pH2);
+    Blynk.virtualWrite(V3, pH3);
+    Blynk.virtualWrite(V4, pH4);
+    Blynk.virtualWrite(V5, pH_K_tank);
 }
 
 
@@ -345,13 +372,6 @@ void ph()
     pH4 = map_float(pH4, 290, 406, 4, 7);
     pH_K_tank = map_float(pH_K_tank, 290, 406, 4, 7);
 
- 
-    Blynk.virtualWrite(V1, pH1);
-    Blynk.virtualWrite(V2, pH2);
-    Blynk.virtualWrite(V3, pH3);
-    Blynk.virtualWrite(V4, pH4);
-    Blynk.virtualWrite(V5, pH_K_tank);
-  
   
     if (pH1 > (pH_setpoint_AL1)) {
         digitalWrite(CO2_VALVE_AL1_PIN, HIGH); 
@@ -405,12 +425,12 @@ void ph()
         led4.off();      
     }
     
-    if ((pH_K_tank > (min_pH_K_tank)) && (pH_K_tank < (max_pH_K_tank))) { // To show if pH is within reasonable values  
-        led5.off();
-    }
-    else {
-        led5.on();        
-    }
+    //if ((pH_K_tank > (min_pH_K_tank)) && (pH_K_tank < (max_pH_K_tank))) { // To show if pH is within reasonable values  
+    //    led5.off();
+    //}
+    //else {
+    //    led5.on();        
+    //}
 }
 
 
@@ -420,6 +440,9 @@ void MeterISR()
     // https://github.com/sekdiy/FlowMeter/blob/master/examples/Simple/Simple.ino 
     Meter.count();
 }
+
+
+
 
 void setup()
 {
@@ -455,7 +478,17 @@ void setup()
     // lcd.begin(16, 2); // set up the LCD's number of columns and rows: 
     // if (ethbutton == LOW) {
     //Blynk.begin(auth, "blynk-cloud.com");
-    //timer.setInterval(2100, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
+    timer.setInterval(4800, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
+    timer.setInterval(3250, blynker2);
+    timer.setInterval(4450, blynker3);
+    timer.setInterval(5220, blynker4);
+    timer.setInterval(5150, blynker5);
+    
+    timer.setInterval(10000, write_in_pH_values); 
+    
+    
+    
+    
     //the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
   
     timer.setInterval(24000, ph);
@@ -466,7 +499,6 @@ void setup()
     // Getting a timer ID which is responsible for closing of valve
     // Every half second it should call a function close_valve, but in next line it is disabled before needed
     timer.disable(valve_close_timer_ID);
-
 
     // enable a call to the 'interrupt service handler' (ISR) on every rising edge at the interrupt pin
     // do this setup step for every ISR you have defined, depending on how many interrupts you use
@@ -529,4 +561,10 @@ int volume = map(sonar.ping_cm(), 36, 3, 29, 70);
 //int pinALast;  
 //int aVal;
 //boolean bCW;
+
+
+
+
+
+
 
