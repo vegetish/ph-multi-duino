@@ -289,6 +289,13 @@ BLYNK_WRITE(15)
     pH_setpoint_AL4 = param.asFloat(); 
 }
 
+void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
+    Blynk.virtualWrite(V21, pH_setpoint_AL1);  
+    Blynk.virtualWrite(V22, pH_setpoint_AL2);
+    Blynk.virtualWrite(V23, pH_setpoint_AL3);
+    Blynk.virtualWrite(V24, pH_setpoint_AL4);
+    Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
+}
 
 void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
     Blynk.virtualWrite(V21, pH_setpoint_AL1);  
@@ -478,6 +485,8 @@ void setup()
     // lcd.begin(16, 2); // set up the LCD's number of columns and rows: 
     // if (ethbutton == LOW) {
     //Blynk.begin(auth, "blynk-cloud.com");
+
+    timer.setInterval(2100, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
     timer.setInterval(4800, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
     timer.setInterval(3250, blynker2);
     timer.setInterval(4450, blynker3);
@@ -487,8 +496,7 @@ void setup()
     timer.setInterval(10000, write_in_pH_values); 
     
     
-    
-    
+ 
     //the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
   
     timer.setInterval(24000, ph);
