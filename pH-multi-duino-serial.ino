@@ -297,6 +297,31 @@ void blynker1() { //Writes the setpoint value to a gague widget.Connect the gagu
     Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
 }
 
+void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
+    Blynk.virtualWrite(V21, pH_setpoint_AL1);  
+}
+void blynker2() {
+	Blynk.virtualWrite(V22, pH_setpoint_AL2);
+}
+void blynker3() {
+    Blynk.virtualWrite(V23, pH_setpoint_AL3);
+}
+void blynker4() {
+	Blynk.virtualWrite(V24, pH_setpoint_AL4);
+}
+void blynker5() {
+	Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
+}
+
+void write_in_pH_values() { // was inside the pH-function before. Took out to put it on a timer.
+    Blynk.virtualWrite(V1, pH1);
+    Blynk.virtualWrite(V2, pH2);
+    Blynk.virtualWrite(V3, pH3);
+    Blynk.virtualWrite(V4, pH4);
+    Blynk.virtualWrite(V5, pH_K_tank);
+}
+
+
 // modified map function for float values. Now we don't need an additional variables (pHm1,pHm2,pHm3,pHm4)
 float map_float (float value,float fromLow, float fromHigh, float toLow, float toHigh)
 {
@@ -354,13 +379,6 @@ void ph()
     pH4 = map_float(pH4, 290, 406, 4, 7);
     pH_K_tank = map_float(pH_K_tank, 290, 406, 4, 7);
 
- 
-    Blynk.virtualWrite(V1, pH1);
-    Blynk.virtualWrite(V2, pH2);
-    Blynk.virtualWrite(V3, pH3);
-    Blynk.virtualWrite(V4, pH4);
-    Blynk.virtualWrite(V5, pH_K_tank);
-  
   
     if (pH1 > (pH_setpoint_AL1)) {
         digitalWrite(CO2_VALVE_AL1_PIN, HIGH); 
@@ -467,7 +485,18 @@ void setup()
     // lcd.begin(16, 2); // set up the LCD's number of columns and rows: 
     // if (ethbutton == LOW) {
     //Blynk.begin(auth, "blynk-cloud.com");
+
     timer.setInterval(2100, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
+    timer.setInterval(4800, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
+    timer.setInterval(3250, blynker2);
+    timer.setInterval(4450, blynker3);
+    timer.setInterval(5220, blynker4);
+    timer.setInterval(5150, blynker5);
+    
+    timer.setInterval(10000, write_in_pH_values); 
+    
+    
+ 
     //the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
   
     timer.setInterval(24000, ph);
