@@ -64,7 +64,7 @@
 #define BLYNK_PRINT DebugSerial
 SoftwareSerial DebugSerial(2, 3); // RX, TX //Need this line to send data fra arduino through another serial than USB-serial, because internett goes voer USB-serial.
                                   //RX --> Receiver, TX --> Transmitter
-char auth[] = "3a4f13d3525e43749b5d0156c28d6ef7"; //Insert auth token between the " "
+char auth[] = "X"; //Insert auth token between the " "
 
 
 /// Constants // here we use #define to write down constants. Same is done for pins, but these are constants that are not pins.
@@ -239,9 +239,11 @@ void minlevel_B_tank()
 {
     //If the lower float switch in the tank-B is closed, turn off the pump in the tank-B
     if (digitalRead(FS_B_MIN) == HIGH) { // here "high" means "contact has open"
+        
         digitalWrite(PUMP_B, LOW);
     }
 }
+
 
 void maxlevel_algae_tanks() 
 {
@@ -289,13 +291,6 @@ BLYNK_WRITE(15)
     pH_setpoint_AL4 = param.asFloat(); 
 }
 
-void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
-    Blynk.virtualWrite(V21, pH_setpoint_AL1);  
-    Blynk.virtualWrite(V22, pH_setpoint_AL2);
-    Blynk.virtualWrite(V23, pH_setpoint_AL3);
-    Blynk.virtualWrite(V24, pH_setpoint_AL4);
-    Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
-}
 
 void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
     Blynk.virtualWrite(V21, pH_setpoint_AL1);  
@@ -311,14 +306,6 @@ void blynker4() {
 }
 void blynker5() {
 	Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
-}
-
-void write_in_pH_values() { // was inside the pH-function before. Took out to put it on a timer.
-    Blynk.virtualWrite(V1, pH1);
-    Blynk.virtualWrite(V2, pH2);
-    Blynk.virtualWrite(V3, pH3);
-    Blynk.virtualWrite(V4, pH4);
-    Blynk.virtualWrite(V5, pH_K_tank);
 }
 
 
@@ -379,6 +366,12 @@ void ph()
     pH4 = map_float(pH4, 290, 406, 4, 7);
     pH_K_tank = map_float(pH_K_tank, 290, 406, 4, 7);
 
+    Blynk.virtualWrite(V1, pH1);
+    Blynk.virtualWrite(V2, pH2);
+    Blynk.virtualWrite(V3, pH3);
+    Blynk.virtualWrite(V4, pH4);
+    Blynk.virtualWrite(V5, pH_K_tank);
+  
   
     if (pH1 > (pH_setpoint_AL1)) {
         digitalWrite(CO2_VALVE_AL1_PIN, HIGH); 
@@ -485,17 +478,12 @@ void setup()
     // lcd.begin(16, 2); // set up the LCD's number of columns and rows: 
     // if (ethbutton == LOW) {
     //Blynk.begin(auth, "blynk-cloud.com");
-
     timer.setInterval(2100, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
-    timer.setInterval(4800, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
+    timer.setInterval(4800, blynker1); 
     timer.setInterval(3250, blynker2);
     timer.setInterval(4450, blynker3);
     timer.setInterval(5220, blynker4);
     timer.setInterval(5150, blynker5);
-    
-    timer.setInterval(10000, write_in_pH_values); 
-    
-    
  
     //the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
   
@@ -569,10 +557,4 @@ int volume = map(sonar.ping_cm(), 36, 3, 29, 70);
 //int pinALast;  
 //int aVal;
 //boolean bCW;
-
-
-
-
-
-
 
