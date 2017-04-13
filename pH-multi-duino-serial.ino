@@ -34,12 +34,12 @@
 #define CO2_VALVE_AL4_PIN 7 //Connect to the relay that will control the power to a pH regulating pump or valve
 
 #define PUMP_A 9 //Need relay
-#define PUMP_B 10 //Need relay
+#define PUMP_B 14 //Need relay
 
-#define WATER_VALVE_AL1_PIN 11 //Need relay
-#define WATER_VALVE_AL2_PIN 12
-#define WATER_VALVE_AL3_PIN 13
-#define WATER_VALVE_AL4_PIN 14
+#define WATER_VALVE_AL1_PIN 10 //Need relay
+#define WATER_VALVE_AL2_PIN 11
+#define WATER_VALVE_AL3_PIN 12
+#define WATER_VALVE_AL4_PIN 13
 
 #define VALVE_K_RELAY_PIN 15 //needed to be replaced by actual pin-number // valve under K-tank //Need relay
 
