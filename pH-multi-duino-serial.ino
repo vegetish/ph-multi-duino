@@ -19,8 +19,7 @@
 #include <OneWire.h> // needed for temperature module (waterproof DS18B20 Digital) 
 
 /// PINS THAT ARE USED IN THIS PROGRAM (Fritzing!) Most of the pins are random. We need to find out relevant pins.
-
-//For Arduino NANO 20,21 (Maybe)
+//For Arduino NANO 20,21 (just in case)
 
 #define TURBIDITY_SENSOR_PIN A1 //analogue 
 #define FLOWMETER_PIN 2 // We need to use one of six interrupt pins. For Arduino Mega it is: 2,3,21,20,19,18
@@ -92,8 +91,7 @@ WidgetLED led2(V9); //
 WidgetLED led3(V10); //
 WidgetLED led4(V11); //
 WidgetLED led_fs_al_tanks(V20);
-
-
+WidgetLED led_BFP(V25);
 
 /// VARIABLES
 // Here variables were declared (they are read once when program starts)
@@ -102,13 +100,11 @@ float pH_setpoint_AL1 = 7.8; //default setpoint at startup set to 7.8 (is correc
 float pH_setpoint_AL2 = 7.8; //default setpoint at startup set to 7.8 (in these lines this variable is beeing created)
 float pH_setpoint_AL3 = 7.8; 
 float pH_setpoint_AL4 = 7.8; 
+//Following lines were needed if would decide to have a LED that would light up, but it was decided to send a direct value to a ValueDisplay
 // const float min_pH_K_tank = 7.4; //default set point. Min pH i CP tanken
 // const float max_pH_K_tank = 8.4; //Max pH i CP tanken
 // It makes sense to lie in the range typical for seawater, i.e. 7.5 to 8.3. (we can probably have a tiny bit wider borders)
 // const float for min/max is written because we are not planning to change it within a program. 
-
-
-
 
 // Variables: pH set to 10 by default to avoid CO2 valves activting on arduino boot 
 // (not really necessary to be done, because checking goes after measuring) 
@@ -192,6 +188,19 @@ void maxlevel_K_tank()  // "void" because we don't expect result in physical wor
 { 
     // /Measure water level, and if it is sufficient, open the valve under K-tank
     int volume = map(sonar.ping_cm(), 36, 3, 29, 70); //measurement of water level
+    if (volume > 65) {
+        if (led_BFP.getValue()==0) {
+            led_BFP.on();
+        }
+        
+    }
+    else {
+        if (led_BFP.getValue() > 0) {
+            led_BFP.off();
+        }
+    }
+    
+    
     if (water_level_measure_counter < WATER_LEVEL_MEASURE_NUMBER) {
         total_water_level_measurments += volume; // += means "add to this variable" there are also -=, /= and *=
         water_level_measure_counter++; // this is an increment operator "++"
@@ -206,6 +215,8 @@ void maxlevel_K_tank()  // "void" because we don't expect result in physical wor
     } 
 }
 //in void maxleve_K_tank() we have two different operators. One is called If. Another is called If/else
+    
+    
     
     
     
@@ -239,9 +250,12 @@ void minlevel_B_tank()
 {
     //If the lower float switch in the tank-B is closed, turn off the pump in the tank-B
     if (digitalRead(FS_B_MIN) == HIGH) { // here "high" means "contact has open"
+        // delay(3000); (If we will not come up with anything better, then can do this.
+        // It is actually not necessary to do it at all, because lower floatswitch is only responsible for turning the pump off.
         digitalWrite(PUMP_B, LOW);
     }
 }
+
 
 void maxlevel_algae_tanks() 
 {
@@ -254,16 +268,29 @@ void maxlevel_algae_tanks()
             digitalWrite(PUMP_B, LOW);
             allow_work_of_K_valve = false;
             // These five lines make it so that we consequently shut down the whole bottom part of RAS, and then forbid to turn it on again
-            led_fs_al_tanks.on();
+            if (led_fs_al_tanks.getValue() == 0) {
+                led_fs_al_tanks.on();
+            } 
         }   
     }
     if (allow_work_of_K_valve) {
-        led_fs_al_tanks.off();
+        if (led_fs_al_tanks.getValue() > 0) {
+            led_fs_al_tanks.off();
+        }
     } 
 }
 
+
+
+
+
+
+
 // Metod param.asInt() reads the parameter from "step H" widget as a whole number.
 // Respectively: param.asFloat() will read it as a float
+
+
+/*
 BLYNK_WRITE(6)  // Changes are set by the actions application itself (this is reading from a widget)
 { 
     STANDARD_TAKEOUT_FROM_AL = param.asFloat(); 
@@ -289,13 +316,6 @@ BLYNK_WRITE(15)
     pH_setpoint_AL4 = param.asFloat(); 
 }
 
-void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
-    Blynk.virtualWrite(V21, pH_setpoint_AL1);  
-    Blynk.virtualWrite(V22, pH_setpoint_AL2);
-    Blynk.virtualWrite(V23, pH_setpoint_AL3);
-    Blynk.virtualWrite(V24, pH_setpoint_AL4);
-    Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
-}
 
 void blynker1() { //Writes the setpoint value to a gague widget.Connect the gague widget to virtual pin 1: to show on the screen what is the setpoint
     Blynk.virtualWrite(V21, pH_setpoint_AL1);  
@@ -312,14 +332,40 @@ void blynker4() {
 void blynker5() {
 	Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
 }
+*/
 
-void write_in_pH_values() { // was inside the pH-function before. Took out to put it on a timer.
-    Blynk.virtualWrite(V1, pH1);
-    Blynk.virtualWrite(V2, pH2);
-    Blynk.virtualWrite(V3, pH3);
-    Blynk.virtualWrite(V4, pH4);
-    Blynk.virtualWrite(V5, pH_K_tank);
+
+BLYNK_WRITE(6)  // Changes are set by the actions application itself (this is reading from a widget)
+{ 
+    STANDARD_TAKEOUT_FROM_AL = param.asFloat(); 
+    Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); //This function takes over blynker1 functionality.
+    // Blynker1 used to be triggered by timer. Now it is going to only be triggered if we press on step-H (steppers for pH-values, and standard takeout from Al)
 }
+
+BLYNK_WRITE(12)  // Connect a step H widget to virtual pin 12 in the app.
+{
+    pH_setpoint_AL1 = param.asFloat();
+    Blynk.virtualWrite(V21, pH_setpoint_AL1); 
+} 
+
+BLYNK_WRITE(13)
+{
+    pH_setpoint_AL2 = param.asFloat(); 
+    Blynk.virtualWrite(V22, pH_setpoint_AL2);
+}
+
+BLYNK_WRITE(14)
+{
+    pH_setpoint_AL3 = param.asFloat(); 
+    Blynk.virtualWrite(V23, pH_setpoint_AL3);
+}
+
+BLYNK_WRITE(15)
+{
+    pH_setpoint_AL4 = param.asFloat(); 
+    Blynk.virtualWrite(V24, pH_setpoint_AL4);
+}
+
 
 
 // modified map function for float values. Now we don't need an additional variables (pHm1,pHm2,pHm3,pHm4)
@@ -352,7 +398,22 @@ void temp_measure_k_tank()
     Blynk.virtualWrite(V18, Temp);
 }
 
-
+void setupBlynk() //Here we set initial values in widget in blynk. Just to make it pretty.
+{
+    Blynk.virtualWrite(V6, STANDARD_TAKEOUT_FROM_AL);
+    Blynk.virtualWrite(V12, pH_setpoint_AL1);
+    Blynk.virtualWrite(V13, pH_setpoint_AL2);
+    Blynk.virtualWrite(V14, pH_setpoint_AL3);
+    Blynk.virtualWrite(V15, pH_setpoint_AL4);
+    
+    Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL);
+    Blynk.virtualWrite(V21, pH_setpoint_AL1);
+    Blynk.virtualWrite(V22, pH_setpoint_AL2);
+    Blynk.virtualWrite(V23, pH_setpoint_AL3);
+    Blynk.virtualWrite(V24, pH_setpoint_AL4);
+    
+    ph(); //It works once and set initial values for pH (it will be called after 24 seconds anyway). Just to have some values during initial setup. 
+}
 
 
 
@@ -379,67 +440,89 @@ void ph()
     pH4 = map_float(pH4, 290, 406, 4, 7);
     pH_K_tank = map_float(pH_K_tank, 290, 406, 4, 7);
 
+    Blynk.virtualWrite(V1, pH1);
+    Blynk.virtualWrite(V2, pH2);
+    Blynk.virtualWrite(V3, pH3);
+    Blynk.virtualWrite(V4, pH4);
+    Blynk.virtualWrite(V5, pH_K_tank);
   
+// With the help of an extra if function for leds, the amount of information that goes to the blynk is minimized.
+
     if (pH1 > (pH_setpoint_AL1)) {
-        digitalWrite(CO2_VALVE_AL1_PIN, HIGH); 
+        digitalWrite(CO2_VALVE_AL1_PIN, HIGH);
         // lcd.setCursor(8, 0);
-        // lcd.print("CO2:ON*");
-        led1.on();
+        // lcd.print("CO2:ON*"); 
+        if (led1.getValue()==0) { //If led was off, it will be turned on.
+// If the led is already ON, program will not send the signal "to switch on" to the blynk and thus will send less data.
+            led1.on();
+        } 
     }
     else {
-        digitalWrite(CO2_VALVE_AL1_PIN, LOW); 
+        digitalWrite(CO2_VALVE_AL1_PIN, LOW);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:OFF");
-        led1.off();      
+        if (led1.getValue() > 0) {
+            led1.off();
+        }      
     }
     
     if (pH2 > (pH_setpoint_AL2)) {  // This if/else statement turns the valve on if the pH value is above the setpoint, or off if it's below the setpoint. Modify according to your need.
-        digitalWrite(CO2_VALVE_AL2_PIN, HIGH); 
+        digitalWrite(CO2_VALVE_AL2_PIN, HIGH);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:ON*");
-        led2.on();
+        if (led2.getValue()==0) {
+            led2.on();
+        } 
     }
     else {
-        digitalWrite(CO2_VALVE_AL2_PIN, LOW); 
+        digitalWrite(CO2_VALVE_AL2_PIN, LOW);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:OFF");
-        led2.off();      
+        if (led2.getValue() > 0) {
+            led2.off();
+        }       
     }
     
     if (pH3 > (pH_setpoint_AL3)) {  // This if/else statement turns the valve on if the pH value is above the setpoint, or off if it's below the setpoint. Modify according to your need.
         digitalWrite(CO2_VALVE_AL3_PIN, HIGH); 
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:ON*");
-        led3.on();
+        if (led3.getValue()==0) {
+            led3.on();
+        } 
     }
     else {
-        digitalWrite(CO2_VALVE_AL3_PIN, LOW); 
+        digitalWrite(CO2_VALVE_AL3_PIN, LOW);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:OFF");
-        led3.off();      
+        if (led3.getValue() > 0) {
+            led3.off();
+        }      
     }
     
     if (pH4 > (pH_setpoint_AL4)) {
-        digitalWrite(CO2_VALVE_AL4_PIN, HIGH); 
+        digitalWrite(CO2_VALVE_AL4_PIN, HIGH);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:ON*");
-        led4.on();
+        if (led4.getValue()==0) {
+            led4.on();
+        } 
     }
     else {
-        digitalWrite(CO2_VALVE_AL4_PIN, LOW); 
+        digitalWrite(CO2_VALVE_AL4_PIN, LOW);// lcd.setCursor(8, 0);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:OFF");
-        led4.off();      
+        if (led4.getValue() > 0) {
+            led4.off();
+        }      
     }
-    
-    //if ((pH_K_tank > (min_pH_K_tank)) && (pH_K_tank < (max_pH_K_tank))) { // To show if pH is within reasonable values  
+        //if ((pH_K_tank > (min_pH_K_tank)) && (pH_K_tank < (max_pH_K_tank))) { // To show if pH is within reasonable values  
     //    led5.off();
     //}
     //else {
     //    led5.on();        
     //}
 }
-
 
 void MeterISR() 
 {
@@ -485,17 +568,12 @@ void setup()
     // lcd.begin(16, 2); // set up the LCD's number of columns and rows: 
     // if (ethbutton == LOW) {
     //Blynk.begin(auth, "blynk-cloud.com");
-
-    timer.setInterval(2100, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
-    timer.setInterval(4800, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
-    timer.setInterval(3250, blynker2);
-    timer.setInterval(4450, blynker3);
-    timer.setInterval(5220, blynker4);
-    timer.setInterval(5150, blynker5);
-    
-    timer.setInterval(10000, write_in_pH_values); 
-    
-    
+    //timer.setInterval(2100, blynker1); //This timer has updated a new value of the standard setpoint every two seconds
+    //timer.setInterval(4800, blynker1); 
+    //timer.setInterval(3250, blynker2);
+    //timer.setInterval(4450, blynker3);
+    //timer.setInterval(5220, blynker4);
+    //timer.setInterval(5150, blynker5);
  
     //the number for the timers sets the interval for how frequently the function is called. Keep it above 1000 to avoid spamming the server.
   
@@ -512,6 +590,7 @@ void setup()
     // do this setup step for every ISR you have defined, depending on how many interrupts you use
     attachInterrupt(2, MeterISR, RISING); //If interrupt pin is changed then this constant has to be changed to.
     // sometimes initializing the gear generates some pulses that we should ignore
+    setupBlynk();
     Meter.reset();
 }
 
@@ -569,10 +648,3 @@ int volume = map(sonar.ping_cm(), 36, 3, 29, 70);
 //int pinALast;  
 //int aVal;
 //boolean bCW;
-
-
-
-
-
-
-
