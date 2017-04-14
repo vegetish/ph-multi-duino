@@ -40,10 +40,10 @@
 #define PUMP_A 9 //Need relay
 #define PUMP_B 14 //Need relay
 
-#define WATER_VALVE_AL1_PIN 10 //Need relay
-#define WATER_VALVE_AL2_PIN 11
-#define WATER_VALVE_AL3_PIN 12
-#define WATER_VALVE_AL4_PIN 13
+#define WATER_VALVE_AL1_PIN 46 //Need relay
+#define WATER_VALVE_AL2_PIN 47
+#define WATER_VALVE_AL3_PIN 48
+#define WATER_VALVE_AL4_PIN 49
 
 #define VALVE_K_RELAY_PIN 15 //needed to be replaced by actual pin-number // valve under K-tank //Need relay
 
