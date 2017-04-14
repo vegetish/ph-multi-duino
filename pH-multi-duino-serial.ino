@@ -150,7 +150,7 @@ void turb_control()
         if (average_turbidity < turbsetpoint) { //we get an average of ten measurments and compare it to setpoint
             Meter.reset(); // Here we reset the turn count for flowmeter and in the next line we open the valve.
             // Meter is an object assosiated with flow sensor. Reset is it's method
-            digitalWrite(water_adding_valve_pin[current_tank], HIGH);
+            digitalWrite(water_adding_valve_pin[current_tank], LOW);
             timer.enable(valve_close_timer_ID);
         }
         total_turbidity_measurments = 0; //Set value to zero in order to get a new total for next ten measurments
@@ -165,7 +165,7 @@ void close_valve ()
     double current_volume_flowmeter = Meter.getCurrentVolume(); // here we declare a local variable. It's born in this frame. And it's gonna die here too.
     // And this method works because it belongs to an object Meter (which is an instance of a class that is a part of a library (flowmeter.h) that we connected.
     if (current_volume_flowmeter >= STANDARD_TAKEOUT_FROM_AL) {
-        digitalWrite(water_adding_valve_pin[current_tank], LOW);
+        digitalWrite(water_adding_valve_pin[current_tank], HIGH);
         timer.disable(valve_close_timer_ID);
         switch_tank();
     }
@@ -208,7 +208,7 @@ void maxlevel_K_tank()  // "void" because we don't expect result in physical wor
     else {
         float average_water_level = total_water_level_measurments / WATER_LEVEL_MEASURE_NUMBER;
         if ((average_water_level >= MAX_WATER_VOLUME_K_TANK) && allow_work_of_K_valve) { // To ampersands mean a logical "and" // It causes both conditions to be fulfilled
-            digitalWrite(VALVE_K_RELAY_PIN, HIGH);  // If I need to open appropriate valve, then I need to apply voltage to the corresponding relay
+            digitalWrite(VALVE_K_RELAY_PIN, LOW);  // If I need to open appropriate valve, then I need to apply voltage to the corresponding relay
         }
         total_water_level_measurments = 0; //Set value to zero in order to get a new total for next ten measurments
         water_level_measure_counter = 0; //Set value to zero in order to start a new measurment cycle
@@ -225,8 +225,8 @@ void maxlevel_A_tank()
 { 
     // If the upper float switch in the tank-A is closed, close the valve and switch on the pump in the tank-A
     if (digitalRead(FS_A_MAX) == LOW) { // If FS read is high then...
-        digitalWrite(VALVE_K_RELAY_PIN, LOW);
-        digitalWrite(PUMP_A, HIGH);
+        digitalWrite(VALVE_K_RELAY_PIN, HIGH);
+        digitalWrite(PUMP_A, LOW);
     }
 }
 
@@ -234,7 +234,7 @@ void minlevel_A_tank()
 {
     // If the lower float swtich in the tank-A is opened, turn off the pump in the tank-A
     if (digitalRead(FS_A_MIN) == HIGH) {
-        digitalWrite(PUMP_A, LOW);
+        digitalWrite(PUMP_A, HIGH);
     }
 }
 
@@ -242,7 +242,7 @@ void maxlevel_B_tank()
 {
     // If the upper float switch in the tank-B is closed, turn on the pump in the tank-B
     if (digitalRead(FS_B_MAX) == LOW) {
-        digitalWrite(PUMP_B, HIGH);
+        digitalWrite(PUMP_B, LOW);
     }
 }
 
@@ -252,7 +252,7 @@ void minlevel_B_tank()
     if (digitalRead(FS_B_MIN) == HIGH) { // here "high" means "contact has open"
         // delay(3000); (If we will not come up with anything better, then can do this.
         // It is actually not necessary to do it at all, because lower floatswitch is only responsible for turning the pump off.
-        digitalWrite(PUMP_B, LOW);
+        digitalWrite(PUMP_B, HIGH);
     }
 }
 
@@ -263,9 +263,9 @@ void maxlevel_algae_tanks()
     for (int al_tank_index = 0; al_tank_index < 4; al_tank_index++) { // Is called cycle with a counter.
         // That is, al_tank_index first turn to the tank zero, then consequently turn to the tanks one, two and three (therefore it is written "> 4")
         if (digitalRead(algae_FS_pin[al_tank_index]) == LOW) { // If the upper float switch in the tank-A is closed, close the valve and switch on the pump in the tank-A
-            digitalWrite(VALVE_K_RELAY_PIN, LOW);
-            digitalWrite(PUMP_A, LOW);
-            digitalWrite(PUMP_B, LOW);
+            digitalWrite(VALVE_K_RELAY_PIN, HIGH);
+            digitalWrite(PUMP_A, HIGH);
+            digitalWrite(PUMP_B, HIGH);
             allow_work_of_K_valve = false;
             // These five lines make it so that we consequently shut down the whole bottom part of RAS, and then forbid to turn it on again
             if (led_fs_al_tanks.getValue() == 0) {
@@ -449,7 +449,7 @@ void ph()
 // With the help of an extra if function for leds, the amount of information that goes to the blynk is minimized.
 
     if (pH1 > (pH_setpoint_AL1)) {
-        digitalWrite(CO2_VALVE_AL1_PIN, HIGH);
+        digitalWrite(CO2_VALVE_AL1_PIN, LOW);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:ON*"); 
         if (led1.getValue()==0) { //If led was off, it will be turned on.
@@ -458,7 +458,7 @@ void ph()
         } 
     }
     else {
-        digitalWrite(CO2_VALVE_AL1_PIN, LOW);
+        digitalWrite(CO2_VALVE_AL1_PIN, HIGH);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:OFF");
         if (led1.getValue() > 0) {
@@ -467,7 +467,7 @@ void ph()
     }
     
     if (pH2 > (pH_setpoint_AL2)) {  // This if/else statement turns the valve on if the pH value is above the setpoint, or off if it's below the setpoint. Modify according to your need.
-        digitalWrite(CO2_VALVE_AL2_PIN, HIGH);
+        digitalWrite(CO2_VALVE_AL2_PIN, LOW);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:ON*");
         if (led2.getValue()==0) {
@@ -475,7 +475,7 @@ void ph()
         } 
     }
     else {
-        digitalWrite(CO2_VALVE_AL2_PIN, LOW);
+        digitalWrite(CO2_VALVE_AL2_PIN, HIGH);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:OFF");
         if (led2.getValue() > 0) {
@@ -484,7 +484,7 @@ void ph()
     }
     
     if (pH3 > (pH_setpoint_AL3)) {  // This if/else statement turns the valve on if the pH value is above the setpoint, or off if it's below the setpoint. Modify according to your need.
-        digitalWrite(CO2_VALVE_AL3_PIN, HIGH); 
+        digitalWrite(CO2_VALVE_AL3_PIN, LOW); 
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:ON*");
         if (led3.getValue()==0) {
@@ -492,7 +492,7 @@ void ph()
         } 
     }
     else {
-        digitalWrite(CO2_VALVE_AL3_PIN, LOW);
+        digitalWrite(CO2_VALVE_AL3_PIN, HIGH);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:OFF");
         if (led3.getValue() > 0) {
@@ -501,7 +501,7 @@ void ph()
     }
     
     if (pH4 > (pH_setpoint_AL4)) {
-        digitalWrite(CO2_VALVE_AL4_PIN, HIGH);
+        digitalWrite(CO2_VALVE_AL4_PIN, LOW);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:ON*");
         if (led4.getValue()==0) {
@@ -509,7 +509,7 @@ void ph()
         } 
     }
     else {
-        digitalWrite(CO2_VALVE_AL4_PIN, LOW);// lcd.setCursor(8, 0);
+        digitalWrite(CO2_VALVE_AL4_PIN, HIGH);// lcd.setCursor(8, 0);
         // lcd.setCursor(8, 0);
         // lcd.print("CO2:OFF");
         if (led4.getValue() > 0) {
@@ -648,3 +648,10 @@ int volume = map(sonar.ping_cm(), 36, 3, 29, 70);
 //int pinALast;  
 //int aVal;
 //boolean bCW;
+
+
+
+
+
+
+
