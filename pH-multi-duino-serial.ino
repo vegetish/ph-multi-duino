@@ -15,7 +15,11 @@
 #include <NewPing.h> //using NewPing sonar library
 #include <FlowMeter.h> //using a library for the flowmeter
 #include <SoftwareSerial.h> //Relevant to blynk
-#include <BlynkSimpleStream.h> //Relevant to blynk
+
+#include <BlynkSimpleStream.h> //for blynk through serial or USB
+//#include <SPI.h>
+//#include <Ethernet.h>
+//#include <BlynkSimpleEthernet.h> //blynk via ethernet connection
 #include <OneWire.h> // needed for temperature module (waterproof DS18B20 Digital) 
 
 /// PINS THAT ARE USED IN THIS PROGRAM (Fritzing!) Most of the pins are random. We need to find out relevant pins.
