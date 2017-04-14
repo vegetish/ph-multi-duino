@@ -566,6 +566,16 @@ void setup()
     pinMode(PUMP_B, OUTPUT); 
     // Analog channels are not configurable for INPUT or OUTPUT. It is only relevant for digital pins
     // Howerver, analog pins can be configured to work as digital pins.
+    digitalWrite(CO2_VALVE_AL1_PIN, HIGH);
+    digitalWrite(CO2_VALVE_AL2_PIN, HIGH);
+    digitalWrite(CO2_VALVE_AL3_PIN, HIGH);
+    digitalWrite(CO2_VALVE_AL4_PIN, HIGH);
+    digitalWrite(WATER_VALVE_AL1_PIN, HIGH);
+    digitalWrite(WATER_VALVE_AL2_PIN, HIGH);
+    digitalWrite(WATER_VALVE_AL3_PIN, HIGH);
+    digitalWrite(WATER_VALVE_AL4_PIN, HIGH);
+    digitalWrite(PUMP_A, HIGH);
+    digitalWrite(PUMP_B, HIGH);
     
     Blynk.begin(Serial, auth);
     
