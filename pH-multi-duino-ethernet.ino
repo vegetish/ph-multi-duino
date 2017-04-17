@@ -45,7 +45,7 @@
 #define WATER_VALVE_AL3_PIN 12
 #define WATER_VALVE_AL4_PIN 13
 
-#define W5100_CS  10
+#define W5100_CS  10 //Line is necessary to connect via ethernet.
 
 #define VALVE_K_RELAY_PIN 15 //needed to be replaced by actual pin-number // valve under K-tank //Need relay
 
