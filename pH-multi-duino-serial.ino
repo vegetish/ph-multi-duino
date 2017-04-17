@@ -40,10 +40,10 @@
 #define PUMP_A 9 //Need relay
 #define PUMP_B 14 //Need relay
 
-#define WATER_VALVE_AL1_PIN 47 //Need relay
-#define WATER_VALVE_AL2_PIN 48
-#define WATER_VALVE_AL3_PIN 49
-#define WATER_VALVE_AL4_PIN 50
+#define WATER_VALVE_AL1_PIN 11 //Need relay
+#define WATER_VALVE_AL2_PIN 12
+#define WATER_VALVE_AL3_PIN 13
+#define WATER_VALVE_AL4_PIN 14
 
 #define VALVE_K_RELAY_PIN 15 //needed to be replaced by actual pin-number // valve under K-tank //Need relay
 
@@ -118,6 +118,11 @@ float pH2 = 10;
 float pH3 = 10;
 float pH4 = 10;
 float pH_K_tank = 10;
+float Po1;
+float Po2;
+float Po3;
+float Po4;
+float Po5;
 
 int water_adding_valve_pin[] = {WATER_VALVE_AL1_PIN, WATER_VALVE_AL2_PIN, WATER_VALVE_AL3_PIN, WATER_VALVE_AL4_PIN}; // array of pin-numbers, where algae-valves  are connected
 int current_tank = 0; //index of the item from water_adding_valve_pin-array, this item contains PIN, that is used now for the water-adding.
@@ -325,16 +330,16 @@ void blynker1() { //Writes the setpoint value to a gague widget.Connect the gagu
     Blynk.virtualWrite(V21, pH_setpoint_AL1);  
 }
 void blynker2() {
-	Blynk.virtualWrite(V22, pH_setpoint_AL2);
+  Blynk.virtualWrite(V22, pH_setpoint_AL2);
 }
 void blynker3() {
     Blynk.virtualWrite(V23, pH_setpoint_AL3);
 }
 void blynker4() {
-	Blynk.virtualWrite(V24, pH_setpoint_AL4);
+  Blynk.virtualWrite(V24, pH_setpoint_AL4);
 }
 void blynker5() {
-	Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
+  Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
 }
 */
 
@@ -423,11 +428,11 @@ void setupBlynk() //Here we set initial values in widget in blynk. Just to make 
 
 void ph()
 {
-    pH1 = (1023 - analogRead(PH1_PIN)); // it is done convert value from analogue sensor to 
-    pH2 = (1023 - analogRead(PH2_PIN));
-    pH3 = (1023 - analogRead(PH3_PIN));
-    pH4 = (1023 - analogRead(PH4_PIN));
-    pH_K_tank = (1023 - analogRead (PH_K_TANK_PIN));
+    Po1 = (1023 - analogRead(PH1_PIN)); // it is done convert value from analogue sensor to 
+    Po2 = (1023 - analogRead(PH2_PIN));
+    Po3 = (1023 - analogRead(PH3_PIN));
+    Po4 = (1023 - analogRead(PH4_PIN));
+    Po5 = (1023 - analogRead (PH_K_TANK_PIN));
   
     //Serial.print(Po1); //This is the raw voltage value for the pH module
     //Serial.print(Po2); //This is the raw voltage value for the pH module
@@ -438,11 +443,16 @@ void ph()
     //290@ph4
 
     //Serial.print(", ph =");
-    pH1 = map_float(pH1, 290, 406, 4, 7);
-    pH2 = map_float(pH2, 290, 406, 4, 7);
-    pH3 = map_float(pH3, 290, 406, 4, 7);
-    pH4 = map_float(pH4, 290, 406, 4, 7);
-    pH_K_tank = map_float(pH_K_tank, 290, 406, 4, 7);
+    float pHm1 = map(Po1, 290, 406, 400, 700);
+    float pH1 = (pHm1/100);
+    float pHm2 = map(Po2, 290, 406, 400, 700);
+    float pH2 = (pHm2/100);
+    float pHm3 = map(Po3, 290, 406, 400, 700);
+    float pH3 = (pHm3/100);
+    float pHm4 = map(Po4, 290, 406, 400, 700);
+    float pH4 = (pHm4/100);
+    float pHm_K_tank = map(Po5, 290, 406, 400, 700);
+    float pH_K_tank = (pHm_K_tank/100);
 
     Blynk.virtualWrite(V1, pH1);
     Blynk.virtualWrite(V2, pH2);
@@ -566,7 +576,7 @@ void setup()
     pinMode(PUMP_B, OUTPUT); 
     // Analog channels are not configurable for INPUT or OUTPUT. It is only relevant for digital pins
     // Howerver, analog pins can be configured to work as digital pins.
-    digitalWrite(CO2_VALVE_AL1_PIN, HIGH);
+    digitalWrite(CO2_VALVE_AL1_PIN, HIGH); //Turns off relays as arduino boots up
     digitalWrite(CO2_VALVE_AL2_PIN, HIGH);
     digitalWrite(CO2_VALVE_AL3_PIN, HIGH);
     digitalWrite(CO2_VALVE_AL4_PIN, HIGH);
