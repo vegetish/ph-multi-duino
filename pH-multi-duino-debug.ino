@@ -301,7 +301,7 @@ void maxlevel_algae_tanks()
 // Respectively: param.asFloat() will read it as a float
 
 
-/*
+
 BLYNK_WRITE(6)  // Changes are set by the actions application itself (this is reading from a widget)
 { 
     STANDARD_TAKEOUT_FROM_AL = param.asFloat(); 
@@ -348,7 +348,7 @@ void blynker4() {
 void blynker5() {
   Blynk.virtualWrite(V26, STANDARD_TAKEOUT_FROM_AL); 
 }
-*/
+
 
 
 BLYNK_WRITE(6)  // Changes are set by the actions application itself (this is reading from a widget)
